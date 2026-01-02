@@ -1,0 +1,172 @@
+/**
+ * BEAM-NAMINGTOOL - SVG 繪圖區樣式
+ * 包含：格線、Grid Bubble、梁線、梁標籤、選取框、對稱軸
+ */
+
+/* --- 格線 --- */
+.grid-lines line {
+  stroke: #475569;
+  stroke-width: 0.5px;
+  stroke-dasharray: 12 6; /* 更長的虛線線段，更稀疏 */
+  vector-effect: non-scaling-stroke;
+}
+
+/* --- Grid Bubble 連接線 --- */
+.grid-bubble-connector {
+  stroke-width: 1px;
+  stroke-dasharray: 8 4; /* 虛線 */
+  vector-effect: non-scaling-stroke;
+  opacity: 0.6;
+}
+
+.grid-bubble-connector.rubber-band {
+  stroke-dasharray: 5, 5;
+  animation: dash 0.5s linear infinite;
+}
+
+/* --- Grid Bubble --- */
+.grid-bubble {
+  fill: white; /* 中間留白 */
+  /* stroke color is controlled by JS for coordsystem colors */
+  stroke-width: 3px; /* 加粗 */
+  vector-effect: non-scaling-stroke; /* 防止縮放時描邊變粗 */
+}
+
+.grid-bubble.draggable {
+  cursor: move;
+  transition: r 0.2s ease, stroke-width 0.2s ease;
+  user-select: none;
+  pointer-events: all; /* 保留 pointer-events 讓 bubble 本身可以顯示 hover 效果 */
+  stroke-width: 3px;
+}
+
+.grid-bubble.draggable:hover {
+  r: 22;
+  stroke-width: 2.5;
+}
+
+.grid-bubble.dragging {
+  cursor: grabbing;
+  opacity: 0.8;
+  user-select: none;
+}
+
+/* 為 bubble 添加不可見的點擊區域 - 僅用於擴大點擊範圍 */
+.grid-bubble-hitarea {
+  fill: rgba(255,255,255,0.01); /* 使用近乎透明的填充來接收點擊 */
+  stroke: transparent;
+  stroke-width: 0;
+  pointer-events: all;
+  cursor: move; /* 游標顯示為 move 表示可拖動 */
+}
+
+.grid-bubble-text {
+  fill: #000000; /* 字體保持黑色 */
+  font-weight: 600; /* 加粗字體 */
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-size: 14px; /* 設定基礎字體大小，會隨 SVG 縮放自然放大縮小 */
+  /* 讓點擊穿透到 hitarea，統一由 hitarea 處理所有點擊 */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Hidden state for grid elements */
+.grid-bubble.hidden,
+.grid-bubble-text.hidden,
+.grid-bubble-connector.hidden,
+.grid-line-element.hidden {
+  display: none;
+}
+
+/* --- 梁線 --- */
+.beam-line {
+  stroke: #d1d5db;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke; /* 讓所有梁寬度固定 */
+}
+
+.labeled-beam-line {
+  stroke: #3b82f6; /* 大梁：藍色 */
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.secondary-beam-line {
+  stroke: #f97316; /* 小梁：橘色 */
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.special-beam-line {
+  stroke: var(--theme-accent);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.wall-beam-line {
+  stroke: #000000; /* WB/FWB 梁：黑色 */
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* --- 梁標籤 --- */
+.beam-label {
+  fill: #1e293b;
+  font-weight: 500;
+  cursor: move; /* 顯示可移動游標 */
+  pointer-events: all; /* 確保可以接收點擊事件 */
+  /* font-size 由 JavaScript 動態設定，不在 CSS 中固定 */
+}
+
+/* --- 選取功能 --- */
+.selection-rect {
+  fill: rgba(59, 130, 246, 0.15);
+  stroke: #3b82f6;
+  stroke-width: 2;
+  stroke-dasharray: 5, 5;
+  pointer-events: none;
+  shape-rendering: crispEdges;
+  vector-effect: non-scaling-stroke; /* 防止縮放時線條變粗 */
+}
+
+.selection-rect-crossing {
+  fill: rgba(34, 197, 94, 0.15);
+  stroke: #22c55e;
+  stroke-width: 2;
+  stroke-dasharray: 5, 5;
+  pointer-events: none;
+  shape-rendering: crispEdges;
+  vector-effect: non-scaling-stroke; /* 防止縮放時線條變粗 */
+}
+
+/* AutoCAD 風格十字線游標 */
+.autocad-crosshair {
+  cursor: crosshair !important;
+}
+
+/* 選中狀態 */
+.beam-selected {
+  stroke: #ef4444 !important;
+  stroke-width: 2 !important;
+}
+
+/* 標籤選取使用相同的 class */
+text.beam-selected {
+  fill: #ef4444 !important;
+  font-weight: 500 !important; /* 保持與 .beam-label 相同的字體粗細 */
+}
+
+/* --- 對稱軸線 --- */
+.symmetry-axis-line {
+  stroke: #5D4037;           /* 深咖啡色 */
+  stroke-opacity: 0.64;      /* 透明度 (比 Grid Line 低 20%) */
+  stroke-width: 1.15;        /* 粗細 (比 Grid Line 粗 15%) */
+  stroke-dasharray: 8, 4;    /* 虛線樣式 */
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.symmetry-axis-line.hidden {
+  display: none;
+}

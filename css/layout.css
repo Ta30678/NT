@@ -1,0 +1,41 @@
+/**
+ * BEAM-NAMINGTOOL - 佈局樣式
+ * 包含：輸出區、繪圖區佈局
+ */
+
+/* --- 輸出區 --- */
+#output {
+  margin-top: 20px;
+}
+
+/* --- 繪圖區 --- */
+#drawing {
+  width: 100%;
+  padding: 20px;
+  max-height: 65vh;
+  overflow: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--theme-border);
+}
+
+#drawing-svg {
+  width: 100%;
+  height: 60vh;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid var(--theme-border);
+  cursor: grab;
+  /* [優化] 減少切換時的閃爍 */
+  will-change: transform;
+  contain: layout style paint;
+}
+
+/* [優化] SVG 內容過渡效果 */
+#drawing-svg > * {
+  transition: opacity 0.1s ease-out;
+}
+
+#drawing-svg:active {
+  cursor: grabbing;
+}

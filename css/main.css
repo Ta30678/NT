@@ -1,0 +1,120 @@
+/**
+ * BEAM-NAMINGTOOL - 主要樣式
+ * 包含：CSS 變數、全域樣式、動畫、基礎佈局
+ */
+
+/* --- 全局 box-sizing --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* --- 淺色主題 --- */
+:root {
+  --theme-bg: #f1f5f9;
+  --theme-surface: #ffffff;
+  --theme-border: #e2e8f0;
+  --theme-shadow: rgba(0, 0, 0, 0.05);
+  --theme-text-primary: #1e293b;
+  --theme-text-secondary: #64748b;
+  --theme-accent: #f97316;
+  --theme-accent-hover: #ea580c;
+  --theme-success: #22c55e;
+  --theme-success-hover: #16a34a;
+}
+
+/* --- 動畫 --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* --- 基礎樣式 --- */
+body {
+  font-family: "Inter", "Microsoft JhengHei", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 26px 14px;
+  color: var(--theme-text-primary);
+  background-color: var(--theme-bg);
+  position: relative;
+}
+
+#container {
+  width: 90%;
+  max-width: none;
+  background: var(--theme-surface);
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 10px 25px -5px var(--theme-shadow),
+    0 8px 10px -6px var(--theme-shadow);
+  animation: fadeIn 0.8s ease-out forwards;
+  position: relative;
+  z-index: 1;
+}
+
+h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--theme-text-primary);
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+h1::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: var(--theme-accent);
+  border-radius: 2px;
+}
+
+h3 {
+  color: var(--theme-text-primary);
+  font-weight: 500;
+  border-bottom: 1px solid var(--theme-border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.error {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+/* --- 拖動狀態 --- */
+body.dragging-bubble {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+body.dragging-bubble * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
