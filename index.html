@@ -3706,6 +3706,20 @@
         document.getElementById("beamTypeSelector").disabled = false;
         // 【在最後一行後面加上】
         document.getElementById("mirrorModeToggle").disabled = false;
+
+        // [新增] 預設選擇 1F 樓層（如果存在），否則選擇第一個樓層
+        const defaultStory = availableStories.includes("1F")
+          ? "1F"
+          : availableStories.length > 0
+            ? availableStories[availableStories.length - 1]
+            : "all";
+        selector.value = defaultStory;
+        fullscreenSelector.value = defaultStory;
+
+        // 觸發樓層變更事件以更新顯示
+        if (defaultStory !== "all") {
+          handleStoryChange();
+        }
       }
 
       function handleStoryChange() {

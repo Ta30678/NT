@@ -28,6 +28,14 @@ export function exportToExcel() {
 
     if (group.length === 1) {
       beamsInGroup.forEach((beam) => {
+        // [新增] 排除特殊梁（WB/FWB 等黑色桿件）和未編號的梁
+        if (
+          beam.isSpecialBeam ||
+          !beam.newLabel ||
+          beam.newLabel === "未編號"
+        ) {
+          return; // 跳過這些梁，不輸出到 Excel
+        }
         preppedData.push({
           floor: beam.story,
           etabsLabel: beam.name,
@@ -44,6 +52,14 @@ export function exportToExcel() {
       // 用 ETABS 編號 + 新編號 作為唯一識別
       const uniqueBeamsInGroup = new Map();
       beamsInGroup.forEach((beam) => {
+        // [新增] 排除特殊梁（WB/FWB 等黑色桿件）和未編號的梁
+        if (
+          beam.isSpecialBeam ||
+          !beam.newLabel ||
+          beam.newLabel === "未編號"
+        ) {
+          return; // 跳過這些梁，不輸出到 Excel
+        }
         const key = `${beam.name}|${beam.newLabel}`;
         if (!uniqueBeamsInGroup.has(key)) {
           uniqueBeamsInGroup.set(key, {
