@@ -200,6 +200,9 @@ import {
   closeMirrorSettingsModal,
 } from "./features/mirror-mode.js";
 
+// History Manager
+import { HistoryManager } from "./core/history-manager.js";
+
 // ============================================
 // 掛載全域函數（給 HTML onclick 使用）
 // ============================================
@@ -350,6 +353,235 @@ window.toggleMirrorModeFromModal = toggleMirrorModeFromModal;
 window.updateMirrorStatusText = updateMirrorStatusText;
 window.openMirrorSettingsModal = openMirrorSettingsModal;
 window.closeMirrorSettingsModal = closeMirrorSettingsModal;
+
+// 由 main.js 掛載到 window
+
+// ============================================
+// Undo/Redo 功能實作
+// ============================================
+
+window.historyManager = new HistoryManager(50);
+console.log("[Main] HistoryManager initialized (Limit: 50)");
+
+// 將當前狀態存入歷史紀錄
+window.pushHistoryState = () => {
+  console.log("[History] Pushing state...");
+  try {
+    // [同步] 確保 appState 與全域變數同步 (因為 index.html 可能使用 window.fullProcessedBeams)
+    if (
+      typeof window.fullProcessedBeams !== "undefined" &&
+      window.fullProcessedBeams !== appState.fullProcessedBeams
+    ) {
+      console.log("[History] Syncing window.fullProcessedBeams to appState");
+      appState.fullProcessedBeams = window.fullProcessedBeams;
+    }
+    // [同步] fixedLabelRules
+    if (
+      typeof window.fixedLabelRules !== "undefined" &&
+      window.fixedLabelRules !== appState.fixedLabelRules
+    ) {
+      // console.log("[History] Syncing window.fixedLabelRules to appState");
+      // appState.fixedLabelRules = window.fixedLabelRules;
+      // 暫不強制同步 fixedLabelRules，因為 module 可能已經處理了
+    }
+
+    window.historyManager.pushState(appState, {
+      secondaryBeamConfig: window.secondaryBeamConfig || {},
+      userGridConfig: window.userGridConfig || {},
+      fixedLabelRules: appState.fixedLabelRules
+        ? [...appState.fixedLabelRules]
+        : [],
+    });
+    window.updateUndoRedoButtons();
+    console.log(
+      `[History] State pushed. Undo stack size: ${window.historyManager.undoStack.length}`,
+    );
+  } catch (err) {
+    console.error("[History] Failed to push state:", err);
+  }
+};
+
+// 執行復原
+window.performUndo = () => {
+  console.log("[History] Performing Undo...");
+  if (!window.historyManager.canUndo()) {
+    console.log("[History] Nothing to undo.");
+    return;
+  }
+
+  // push前先sync，確保當前狀態正確
+  if (typeof window.fullProcessedBeams !== "undefined") {
+    appState.fullProcessedBeams = window.fullProcessedBeams;
+  }
+
+  const currentState = window.historyManager.createSnapshot(appState, {
+    secondaryBeamConfig: window.secondaryBeamConfig || {},
+    userGridConfig: window.userGridConfig || {},
+    fixedLabelRules: appState.fixedLabelRules
+      ? [...appState.fixedLabelRules]
+      : [],
+  });
+
+  const prevState = window.historyManager.undo(currentState);
+  if (prevState) {
+    window.restoreState(prevState);
+    window.updateUndoRedoButtons();
+    showInlineStatus("已復原上一步操作", "info");
+    console.log("[History] Undo successful.");
+  } else {
+    console.warn("[History] Undo failed (returned null).");
+  }
+};
+
+// 執行重做
+window.performRedo = () => {
+  console.log("[History] Performing Redo...");
+  if (!window.historyManager.canRedo()) {
+    console.log("[History] Nothing to redo.");
+    return;
+  }
+
+  // push前先sync
+  if (typeof window.fullProcessedBeams !== "undefined") {
+    appState.fullProcessedBeams = window.fullProcessedBeams;
+  }
+
+  const currentState = window.historyManager.createSnapshot(appState, {
+    secondaryBeamConfig: window.secondaryBeamConfig || {},
+    userGridConfig: window.userGridConfig || {},
+    fixedLabelRules: appState.fixedLabelRules
+      ? [...appState.fixedLabelRules]
+      : [],
+  });
+
+  const nextState = window.historyManager.redo(currentState);
+  if (nextState) {
+    window.restoreState(nextState);
+    window.updateUndoRedoButtons();
+    showInlineStatus("已重做操作", "info");
+    console.log("[History] Redo successful.");
+  }
+};
+
+// 更新按鈕狀態
+window.updateUndoRedoButtons = () => {
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) {
+    const canUndo = window.historyManager.canUndo();
+    undoBtn.disabled = !canUndo;
+    undoBtn.style.cursor = canUndo ? "pointer" : "not-allowed";
+    undoBtn.style.color = canUndo ? "#3b82f6" : "#94a3b8"; // 藍色 vs 灰色
+    undoBtn.title = `復原 (Ctrl+Z) - ${window.historyManager.undoStack.length} 步`;
+  }
+  if (redoBtn) {
+    const canRedo = window.historyManager.canRedo();
+    redoBtn.disabled = !canRedo;
+    redoBtn.style.cursor = canRedo ? "pointer" : "not-allowed";
+    redoBtn.style.color = canRedo ? "#3b82f6" : "#94a3b8";
+    redoBtn.title = `重做 (Ctrl+Y) - ${window.historyManager.redoStack.length} 步`;
+  }
+};
+
+// 恢復狀態
+window.restoreState = (state) => {
+  console.log("[History] Restoring state...", state);
+
+  if (state.fullProcessedBeams) {
+    appState.fullProcessedBeams = state.fullProcessedBeams;
+    // [同步] 同步回 window 全域變數，因為 index.html 可能依賴它
+    if (typeof window.fullProcessedBeams !== "undefined") {
+      console.log("[History] Syncing appState to window.fullProcessedBeams");
+      window.fullProcessedBeams = state.fullProcessedBeams;
+    }
+  }
+
+  if (state.secondaryBeamConfig) {
+    if (window.secondaryBeamConfig) {
+      Object.assign(window.secondaryBeamConfig, state.secondaryBeamConfig);
+    } else {
+      window.secondaryBeamConfig = state.secondaryBeamConfig;
+    }
+
+    if (typeof window.updateSecondaryBeamStatusText === "function") {
+      window.updateSecondaryBeamStatusText();
+    }
+    // [修正] 直接儲存到 localStorage，避免呼叫 saveSecondaryBeamConfig() 觸發 pushHistoryState，導致 Undo/Redo失效
+    try {
+      localStorage.setItem(
+        "secondaryBeamConfig",
+        JSON.stringify(window.secondaryBeamConfig),
+      );
+      console.log("[History] secondaryBeamConfig saved to localStorage");
+    } catch (e) {
+      console.error("[History] Failed to save secondaryBeamConfig:", e);
+    }
+
+    // if (typeof window.saveSecondaryBeamConfig === 'function') {
+    //     window.saveSecondaryBeamConfig();
+    // }
+  }
+
+  if (state.userGridConfig) {
+    window.userGridConfig = state.userGridConfig;
+    // userGridConfig 需要應用到 UI 嗎？目前是 applyGridConfig 讀取 UI 到變數
+    // 反向：變數到 UI 顯示，可能需要重新呼叫 showGridConfig（如果開啟的話）
+  }
+
+  if (state.fixedLabelRules) {
+    appState.fixedLabelRules = state.fixedLabelRules;
+    // 同步到 UI 和 localStorage
+    if (typeof window.saveFixedLabelRules === "function") {
+      window.saveFixedLabelRules();
+    }
+    if (typeof window.updateFixedLabelSummary === "function") {
+      window.updateFixedLabelSummary();
+    }
+    if (typeof window.updateFixedLabelButtonState === "function") {
+      window.updateFixedLabelButtonState();
+    }
+  }
+
+  // 觸發畫面重繪
+  if (typeof window.handleStoryChange === "function") {
+    window.handleStoryChange();
+  }
+
+  console.log("[History] State restoration complete.");
+};
+
+// 鍵盤事件監聽 (Ctrl+Z, Ctrl+Y) - 移到這裡確保函式已定義
+// 使用 capture phase 確保優先處理
+window.addEventListener(
+  "keydown",
+  (e) => {
+    // 忽略輸入框中的按鍵
+    if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
+    // 特別處理 contenteditable 元素
+    if (e.target.isContentEditable) return;
+
+    // 檢查組合鍵
+    if (e.ctrlKey || e.metaKey) {
+      // Undo: Ctrl+Z
+      if (e.code === "KeyZ" || e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        console.log("[Shortcut] Ctrl+Z detected");
+        window.performUndo();
+      }
+      // Redo: Ctrl+Y or Ctrl+Shift+Z
+      else if (
+        e.code === "KeyY" ||
+        e.key.toLowerCase() === "y" ||
+        (e.shiftKey && (e.code === "KeyZ" || e.key.toLowerCase() === "z"))
+      ) {
+        e.preventDefault();
+        console.log("[Shortcut] Ctrl+Y / Ctrl+Shift+Z detected");
+        window.performRedo();
+      }
+    }
+  },
+  true,
+); // Use capture to ensure we get it first
 
 // ============================================
 // 初始化

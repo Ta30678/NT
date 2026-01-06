@@ -328,6 +328,7 @@
                 style="font-size: 0.85em; color: #1e293b; font-weight: 500"
               ></span>
             </div>
+
             <!-- FIXED 按鈕列 -->
             <div style="display: flex; gap: 10px; align-items: center">
               <button
@@ -491,34 +492,113 @@
             <h3 style="margin: 0">
               結構平面圖 (<span id="plan-story-name">所有樓層合併</span>)
             </h3>
-            <button
-              onclick="toggleHelpDialog()"
-              style="
-                min-width: 32px;
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                background-color: var(--theme-accent);
-                color: white;
-                border: none;
-                font-size: 16px;
-                font-weight: bold;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s ease;
-                padding: 0;
-                flex-shrink: 0;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'var(--theme-accent-hover)'
-              "
-              onmouseout="this.style.backgroundColor = 'var(--theme-accent)'"
-              title="選取功能說明"
-            >
-              ?
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <!-- 復原/重做按鈕 -->
+              <div style="display: flex; gap: 6px; align-items: center">
+                <button
+                  id="undoBtn"
+                  onclick="performUndo()"
+                  title="復原 (Ctrl+Z)"
+                  disabled
+                  style="
+                    padding: 6px 12px;
+                    font-size: 0.9em;
+                    background: #f1f5f9;
+                    color: #94a3b8;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    cursor: not-allowed;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: all 0.2s;
+                  "
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 14L4 9l5-5" />
+                    <path
+                      d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"
+                    />
+                  </svg>
+                  Undo
+                </button>
+                <button
+                  id="redoBtn"
+                  onclick="performRedo()"
+                  title="重做 (Ctrl+Y)"
+                  disabled
+                  style="
+                    padding: 6px 12px;
+                    font-size: 0.9em;
+                    background: #f1f5f9;
+                    color: #94a3b8;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    cursor: not-allowed;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: all 0.2s;
+                  "
+                >
+                  Redo
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M15 14l5-5-5-5" />
+                    <path
+                      d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 說明按鈕 -->
+              <button
+                onclick="toggleHelpDialog()"
+                style="
+                  min-width: 32px;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  background-color: var(--theme-accent);
+                  color: white;
+                  border: none;
+                  font-size: 16px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  transition: all 0.2s ease;
+                  padding: 0;
+                  flex-shrink: 0;
+                "
+                onmouseover="
+                  this.style.backgroundColor = 'var(--theme-accent-hover)'
+                "
+                onmouseout="this.style.backgroundColor = 'var(--theme-accent)'"
+                title="選取功能說明"
+              >
+                ?
+              </button>
+            </div>
           </div>
           <div
             id="help-info-box"
@@ -1528,6 +1608,11 @@
        * 儲存小梁編號設定到 localStorage
        */
       function saveSecondaryBeamConfig() {
+        // [新增] 儲存歷史狀態
+        if (typeof pushHistoryState === "function") {
+          pushHistoryState();
+        }
+
         if (window.secondaryBeamConfig) {
           const config = {
             useCustomStart: window.secondaryBeamConfig.useCustomStart,
@@ -1712,11 +1797,29 @@
             if (frames.length > 0) allBeamsAcrossStories.push(...frames);
           }
 
-          fullDrawableBeams = allBeamsAcrossStories.map((f) => ({
-            ...f,
-            j1: previewJoints[f.joint1],
-            j2: previewJoints[f.joint2],
-          }));
+          fullDrawableBeams = allBeamsAcrossStories.map((f) => {
+            const j1 = previewJoints[f.joint1];
+            const j2 = previewJoints[f.joint2];
+
+            // [DEBUG] 追蹤找不到節點座標的梁（預覽階段）
+            if (!j1 || !j2) {
+              console.warn(
+                `[DEBUG-Preview] 梁節點座標未找到: ${f.name} (${f.story})`,
+              );
+              console.warn(
+                `  → joint1="${f.joint1}" → ${j1 ? "有座標" : "未找到"}`,
+              );
+              console.warn(
+                `  → joint2="${f.joint2}" → ${j2 ? "有座標" : "未找到"}`,
+              );
+            }
+
+            return {
+              ...f,
+              j1,
+              j2,
+            };
+          });
 
           storyOrderInfo = availableStories.reduce((acc, story, index) => {
             acc[story] = index;
@@ -1976,6 +2079,11 @@
 
       // [新增] 套用使用者配置
       function applyGridConfig() {
+        // [新增] 儲存歷史狀態
+        if (typeof pushHistoryState === "function") {
+          pushHistoryState();
+        }
+
         // 收集使用者輸入
         userGridConfig = {
           x: gridData.x.map((grid, index) => {
@@ -3260,11 +3368,27 @@
           if (allBeamsAcrossStories.length === 0)
             throw new Error("No qualifying beams found on any story.");
 
-          fullDrawableBeams = allBeamsAcrossStories.map((f) => ({
-            ...f,
-            j1: joints[f.joint1],
-            j2: joints[f.joint2],
-          }));
+          fullDrawableBeams = allBeamsAcrossStories.map((f) => {
+            const j1 = joints[f.joint1];
+            const j2 = joints[f.joint2];
+
+            // [DEBUG] 追蹤找不到節點座標的梁
+            if (!j1 || !j2) {
+              console.warn(`[DEBUG] 梁節點座標未找到: ${f.name} (${f.story})`);
+              console.warn(
+                `  → joint1="${f.joint1}" → ${j1 ? "有座標" : "未找到"}`,
+              );
+              console.warn(
+                `  → joint2="${f.joint2}" → ${j2 ? "有座標" : "未找到"}`,
+              );
+            }
+
+            return {
+              ...f,
+              j1,
+              j2,
+            };
+          });
           storyOrderInfo = availableStories.reduce((acc, story, index) => {
             acc[story] = index;
             return acc;
@@ -3708,6 +3832,8 @@
         document.getElementById("mirrorModeToggle").disabled = false;
 
         // [新增] 預設選擇 1F 樓層（如果存在），否則選擇第一個樓層
+        // 注意：這裡不能調用 handleStoryChange()，因為 fullDrawableBeams 還未初始化
+        // handleStoryChange 會在 previewFile 完成後自動被調用
         const defaultStory = availableStories.includes("1F")
           ? "1F"
           : availableStories.length > 0
@@ -3715,11 +3841,6 @@
             : "all";
         selector.value = defaultStory;
         fullscreenSelector.value = defaultStory;
-
-        // 觸發樓層變更事件以更新顯示
-        if (defaultStory !== "all") {
-          handleStoryChange();
-        }
       }
 
       function handleStoryChange() {
@@ -3817,6 +3938,24 @@
               b.joint1 === beam.joint1 &&
               b.joint2 === beam.joint2,
           );
+
+          // [DEBUG] 追蹤找不到座標的梁
+          if (!originalBeam) {
+            console.warn(
+              `[DEBUG] 找不到座標匹配的梁: ${beam.name} (${beam.story}), joint1=${beam.joint1}, joint2=${beam.joint2}`,
+            );
+            // 嘗試只用 name 和 story 來查找（寬鬆匹配）
+            const fallbackBeam = fullDrawableBeams.find(
+              (b) => b.name === beam.name && b.story === beam.story,
+            );
+            if (fallbackBeam) {
+              console.warn(
+                `  → 使用寬鬆匹配找到: joint1=${fallbackBeam.joint1}, joint2=${fallbackBeam.joint2}`,
+              );
+              return { ...beam, j1: fallbackBeam.j1, j2: fallbackBeam.j2 };
+            }
+          }
+
           return { ...beam, j1: originalBeam?.j1, j2: originalBeam?.j2 };
         });
 
@@ -5025,6 +5164,11 @@
 
       // [新增] 儲存梁編號編輯
       function saveBeamEdit() {
+        // [新增] 儲存歷史狀態
+        if (typeof pushHistoryState === "function") {
+          pushHistoryState();
+        }
+
         if (!currentEditingBeam) return;
 
         const newLabel = document.getElementById("edit-new-label").value.trim();

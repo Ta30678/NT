@@ -117,6 +117,11 @@ export function updateFixedLabelButtonState() {
  * 新增固定編號規則（Modal 版本）
  */
 export function addFixedLabelRuleModal() {
+  // [新增] 儲存歷史狀態
+  if (typeof window.pushHistoryState === "function") {
+    window.pushHistoryState();
+  }
+
   const sectionInput = document.getElementById("fixedSectionModal");
   const labelInput = document.getElementById("fixedLabelModal");
 
@@ -187,6 +192,11 @@ export function updateFixedLabelModalList() {
  * @param {number} index - 規則索引
  */
 export function removeFixedLabelRuleModal(index) {
+  // [新增] 儲存歷史狀態
+  if (typeof window.pushHistoryState === "function") {
+    window.pushHistoryState();
+  }
+
   appState.fixedLabelRules.splice(index, 1);
   saveFixedLabelRules(); // 儲存變更
   updateFixedLabelModalList();

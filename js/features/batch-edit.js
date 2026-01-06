@@ -91,6 +91,11 @@ export function closeBatchEditDialog() {
  * 保存批量編輯
  */
 export function saveBatchEdit() {
+  // [新增] 儲存歷史狀態
+  if (typeof window.pushHistoryState === "function") {
+    window.pushHistoryState();
+  }
+
   const newLabel = document.getElementById("batch-new-label").value.trim();
 
   if (!newLabel) {
