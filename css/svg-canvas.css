@@ -34,7 +34,9 @@
 
 .grid-bubble.draggable {
   cursor: move;
-  transition: r 0.2s ease, stroke-width 0.2s ease;
+  transition:
+    r 0.2s ease,
+    stroke-width 0.2s ease;
   user-select: none;
   pointer-events: all; /* 保留 pointer-events 讓 bubble 本身可以顯示 hover 效果 */
   stroke-width: 3px;
@@ -53,7 +55,7 @@
 
 /* 為 bubble 添加不可見的點擊區域 - 僅用於擴大點擊範圍 */
 .grid-bubble-hitarea {
-  fill: rgba(255,255,255,0.01); /* 使用近乎透明的填充來接收點擊 */
+  fill: rgba(255, 255, 255, 0.01); /* 使用近乎透明的填充來接收點擊 */
   stroke: transparent;
   stroke-width: 0;
   pointer-events: all;
@@ -159,10 +161,10 @@ text.beam-selected {
 
 /* --- 對稱軸線 --- */
 .symmetry-axis-line {
-  stroke: #5D4037;           /* 深咖啡色 */
-  stroke-opacity: 0.64;      /* 透明度 (比 Grid Line 低 20%) */
-  stroke-width: 1.15;        /* 粗細 (比 Grid Line 粗 15%) */
-  stroke-dasharray: 8, 4;    /* 虛線樣式 */
+  stroke: #5d4037; /* 深咖啡色 */
+  stroke-opacity: 0.64; /* 透明度 (比 Grid Line 低 20%) */
+  stroke-width: 1.15; /* 粗細 (比 Grid Line 粗 15%) */
+  stroke-dasharray: 8, 4; /* 虛線樣式 */
   pointer-events: none;
   vector-effect: non-scaling-stroke;
 }

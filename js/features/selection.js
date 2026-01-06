@@ -1,14 +1,14 @@
 /**
  * BEAM-NAMINGTOOL - 圈選功能模組
- * 
+ *
  * 此模組實現 AutoCAD 風格的圈選功能
  * - 左到右：完全框選模式（Window）
  * - 右到左：碰到即選模式（Crossing）
  */
 
-import { appState } from '../config/constants.js';
-import { lineIntersectsLine, lineIntersectsRect } from '../utils/geometry.js';
-import { getSVGCoords, getViewportElement } from '../utils/coord-transform.js';
+import { appState } from "../config/constants.js";
+import { lineIntersectsLine, lineIntersectsRect } from "../utils/geometry.js";
+import { getSVGCoords, getViewportElement } from "../utils/coord-transform.js";
 
 // ============================================
 // 本地狀態
@@ -121,14 +121,14 @@ export function onSelectionStart(evt) {
 
   // 清理舊的選擇框
   const oldRects = appState.svgElement.querySelectorAll(
-    ".selection-rect, .selection-rect-crossing"
+    ".selection-rect, .selection-rect-crossing",
   );
   oldRects.forEach((rect) => rect.remove());
 
   // 創建選擇框
   appState.selectionRect = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "rect"
+    "rect",
   );
   appState.selectionRect.setAttribute("x", appState.selectionStart.x);
   appState.selectionRect.setAttribute("y", appState.selectionStart.y);
@@ -162,7 +162,12 @@ export function onSelectionMove(evt) {
  */
 export function updateSelectionRect() {
   selectionAnimationFrameId = null;
-  if (!appState.isSelecting || !appState.selectionRect || !pendingSelectionEvent) return;
+  if (
+    !appState.isSelecting ||
+    !appState.selectionRect ||
+    !pendingSelectionEvent
+  )
+    return;
 
   const currentPoint = getSVGCoords(pendingSelectionEvent, appState.svgElement);
   const width = currentPoint.x - appState.selectionStart.x;
@@ -172,7 +177,7 @@ export function updateSelectionRect() {
 
   appState.selectionRect.setAttribute(
     "class",
-    isCrossingMode ? "selection-rect-crossing" : "selection-rect"
+    isCrossingMode ? "selection-rect-crossing" : "selection-rect",
   );
 
   const x = Math.min(appState.selectionStart.x, currentPoint.x);
@@ -236,7 +241,7 @@ export function onSelectionEnd(evt) {
  */
 export function selectBeamsInRect(minX, minY, maxX, maxY, isCrossingMode) {
   const beamLines = appState.svgElement.querySelectorAll(
-    ".labeled-beam-line, .secondary-beam-line, .special-beam-line, .wall-beam-line"
+    ".labeled-beam-line, .secondary-beam-line, .special-beam-line, .wall-beam-line",
   );
 
   let selectedCount = 0;
@@ -261,11 +266,26 @@ export function selectBeamsInRect(minX, minY, maxX, maxY, isCrossingMode) {
     let isInside = false;
 
     if (isCrossingMode) {
-      isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX - minX, maxY - minY);
+      isInside = lineIntersectsRect(
+        x1,
+        y1,
+        x2,
+        y2,
+        minX,
+        minY,
+        maxX - minX,
+        maxY - minY,
+      );
     } else {
       isInside =
-        x1 >= minX && x1 <= maxX && y1 >= minY && y1 <= maxY &&
-        x2 >= minX && x2 <= maxX && y2 >= minY && y2 <= maxY;
+        x1 >= minX &&
+        x1 <= maxX &&
+        y1 >= minY &&
+        y1 <= maxY &&
+        x2 >= minX &&
+        x2 <= maxX &&
+        y2 >= minY &&
+        y2 <= maxY;
     }
 
     if (isInside) {
@@ -285,9 +305,9 @@ export function updateBeamVisualState(beamKey, isSelected) {
   const [story, name, joint1, joint2] = beamKey.split("|");
 
   const allElements = appState.svgElement.querySelectorAll(
-    `[data-beam-name="${name}"]`
+    `[data-beam-name="${name}"]`,
   );
-  
+
   allElements.forEach((element) => {
     if (
       element.dataset.beamStory === story &&
@@ -329,7 +349,10 @@ export function clearSelectedBeamLabels() {
 export function onKeyDown(evt) {
   // 如果焦點在輸入框內，不處理快捷鍵
   const activeElement = document.activeElement;
-  if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+  if (
+    activeElement &&
+    (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")
+  ) {
     return;
   }
 
@@ -343,7 +366,10 @@ export function onKeyDown(evt) {
   }
 
   // Enter 或 Space：有選中梁時開啟批量編輯對話框
-  if ((evt.key === "Enter" || evt.key === " ") && appState.selectedBeams.size > 0) {
+  if (
+    (evt.key === "Enter" || evt.key === " ") &&
+    appState.selectedBeams.size > 0
+  ) {
     // 如果批量編輯對話框已經打開，不要重複觸發
     const batchEditDialog = document.getElementById("batch-edit-dialog");
     if (batchEditDialog && batchEditDialog.style.display === "block") {
@@ -428,7 +454,9 @@ export function onKeyDown(evt) {
 
   // Delete：刪除選中梁的編號
   if (evt.key === "Delete" && appState.selectedBeams.size > 0) {
-    if (confirm(`確定要清除 ${appState.selectedBeams.size} 個梁的自訂編號嗎？`)) {
+    if (
+      confirm(`確定要清除 ${appState.selectedBeams.size} 個梁的自訂編號嗎？`)
+    ) {
       clearSelectedBeamLabels();
     }
   }

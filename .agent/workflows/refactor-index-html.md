@@ -198,7 +198,7 @@ async function loadDialogComponent(componentPath, containerId) {
 export async function initDialogs() {
   await loadDialogComponent(
     "components/dialogs/beam-edit-dialog.html",
-    "dialog-container"
+    "dialog-container",
   );
   // ... 載入其他對話框
 }

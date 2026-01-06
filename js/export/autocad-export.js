@@ -1,7 +1,7 @@
 /**
  * BEAM-NAMINGTOOL - AutoCAD 匯出工具
  * 包含：JSON 格式匯出和 CSV 格式匯出
- * 
+ *
  * 依賴：fullProcessedBeams, previewJoints, gridData 全域變數
  */
 
@@ -29,8 +29,7 @@ export function calculateGridRelation(beam, joints, grids) {
     // 找到最接近的 Y 軸線
     const avgY = (j1.y + j2.y) / 2;
     const closestYGrid = grids.y.reduce((prev, curr) => {
-      return Math.abs(curr.ordinate - avgY) <
-        Math.abs(prev.ordinate - avgY)
+      return Math.abs(curr.ordinate - avgY) < Math.abs(prev.ordinate - avgY)
         ? curr
         : prev;
     });
@@ -40,8 +39,7 @@ export function calculateGridRelation(beam, joints, grids) {
     const maxX = Math.max(j1.x, j2.x);
     const betweenX = grids.x
       .filter(
-        (g) =>
-          g.ordinate >= minX - tolerance && g.ordinate <= maxX + tolerance
+        (g) => g.ordinate >= minX - tolerance && g.ordinate <= maxX + tolerance,
       )
       .sort((a, b) => a.ordinate - b.ordinate);
 
@@ -58,8 +56,7 @@ export function calculateGridRelation(beam, joints, grids) {
     // 垂直梁：沿著某條 X 軸線，在兩條 Y 軸線之間
     const avgX = (j1.x + j2.x) / 2;
     const closestXGrid = grids.x.reduce((prev, curr) => {
-      return Math.abs(curr.ordinate - avgX) <
-        Math.abs(prev.ordinate - avgX)
+      return Math.abs(curr.ordinate - avgX) < Math.abs(prev.ordinate - avgX)
         ? curr
         : prev;
     });
@@ -68,8 +65,7 @@ export function calculateGridRelation(beam, joints, grids) {
     const maxY = Math.max(j1.y, j2.y);
     const betweenY = grids.y
       .filter(
-        (g) =>
-          g.ordinate >= minY - tolerance && g.ordinate <= maxY + tolerance
+        (g) => g.ordinate >= minY - tolerance && g.ordinate <= maxY + tolerance,
       )
       .sort((a, b) => a.ordinate - b.ordinate);
 
@@ -147,9 +143,7 @@ export function exportToJSON(beams, joints) {
           x: (j1.x + j2.x) / 2,
           y: (j1.y + j2.y) / 2,
         },
-        length: Math.sqrt(
-          Math.pow(j2.x - j1.x, 2) + Math.pow(j2.y - j1.y, 2)
-        ),
+        length: Math.sqrt(Math.pow(j2.x - j1.x, 2) + Math.pow(j2.y - j1.y, 2)),
         section: beam.prop || "",
         isMainBeam:
           !beam.newLabel.toLowerCase().startsWith("b") &&
@@ -204,7 +198,7 @@ export function exportToJSONV2(beams, joints, grids) {
       "長度",
       "斷面",
       "是否為大梁",
-    ].join(",")
+    ].join(","),
   );
 
   // 依樓層分組
@@ -219,11 +213,7 @@ export function exportToJSONV2(beams, joints, grids) {
   // 為每個樓層生成資料
   floorGroups.forEach((beamsInFloor, floorName) => {
     beamsInFloor.forEach((beam) => {
-      const gridRelation = calculateGridRelation(
-        beam,
-        joints,
-        grids
-      );
+      const gridRelation = calculateGridRelation(beam, joints, grids);
 
       if (gridRelation) {
         // 判斷是否為大梁
@@ -252,7 +242,7 @@ export function exportToJSONV2(beams, joints, grids) {
             gridRelation.length.toFixed(3),
             beam.prop || "",
             isMainBeam ? "是" : "否",
-          ].join(",")
+          ].join(","),
         );
       }
     });

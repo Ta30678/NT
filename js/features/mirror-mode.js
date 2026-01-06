@@ -1,8 +1,8 @@
 /**
  * BEAM-NAMINGTOOL - 鏡像對稱模式模組
- * 
+ *
  * ⚠️ 重要：此模組是核心功能，拆分時保持原有邏輯完全不變！
- * 
+ *
  * 此模組包含：
  * - 對稱軸自動偵測
  * - 對稱軸手動設定（格線選擇、兩點點選）
@@ -10,9 +10,9 @@
  * - 對稱參數設定（及格分數、容許誤差）
  */
 
-import { mirrorState, appState } from '../config/constants.js';
-import { distance } from '../utils/geometry.js';
-import { getViewportElement, getSVGCoords } from '../utils/coord-transform.js';
+import { mirrorState, appState } from "../config/constants.js";
+import { distance } from "../utils/geometry.js";
+import { getViewportElement, getSVGCoords } from "../utils/coord-transform.js";
 
 // ============================================
 // 本地狀態變數（用於 click 模式）
@@ -36,7 +36,7 @@ export function initSymmetrySettingsWheelSupport() {
   if (passScoreInput) {
     passScoreInput.addEventListener("wheel", function (e) {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -1 : 1;  // 改為 1% 為單位
+      const delta = e.deltaY > 0 ? -1 : 1; // 改為 1% 為單位
       let newValue = parseInt(this.value) + delta;
       newValue = Math.max(10, Math.min(100, newValue));
       this.value = newValue;
@@ -47,7 +47,7 @@ export function initSymmetrySettingsWheelSupport() {
   if (toleranceInput) {
     toleranceInput.addEventListener("wheel", function (e) {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.01 : 0.01;  // 步長 0.01m
+      const delta = e.deltaY > 0 ? -0.01 : 0.01; // 步長 0.01m
       let newValue = parseFloat(this.value) + delta;
       newValue = Math.max(0.01, Math.min(2.0, newValue));
       this.value = newValue.toFixed(2);
@@ -60,7 +60,10 @@ export function initSymmetrySettingsWheelSupport() {
     symmetryGridSelect.addEventListener("wheel", function (e) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? 1 : -1;
-      const newIndex = Math.max(0, Math.min(this.options.length - 1, this.selectedIndex + delta));
+      const newIndex = Math.max(
+        0,
+        Math.min(this.options.length - 1, this.selectedIndex + delta),
+      );
       if (newIndex !== this.selectedIndex) {
         this.selectedIndex = newIndex;
         onGridLineSelect();
@@ -88,8 +91,8 @@ export function updateSymmetrySettings() {
 
   console.log(
     `[對稱評分設定] 及格分數: ${(mirrorState.SYMMETRY_PASS_SCORE * 100).toFixed(
-      0
-    )}%, 誤差: ${mirrorState.MATCHING_TOLERANCE.toFixed(2)}m`
+      0,
+    )}%, 誤差: ${mirrorState.MATCHING_TOLERANCE.toFixed(2)}m`,
   );
 }
 
@@ -127,7 +130,9 @@ export function loadSymmetrySettings() {
       const toleranceInput = document.getElementById("symmetryTolerance");
 
       if (passScoreInput) {
-        passScoreInput.value = Math.round(mirrorState.SYMMETRY_PASS_SCORE * 100);
+        passScoreInput.value = Math.round(
+          mirrorState.SYMMETRY_PASS_SCORE * 100,
+        );
       }
       if (toleranceInput) {
         toleranceInput.value = mirrorState.MATCHING_TOLERANCE.toFixed(2);
@@ -135,8 +140,8 @@ export function loadSymmetrySettings() {
 
       console.log(
         `✓ 已載入對稱評分設定: 及格分數=${Math.round(
-          mirrorState.SYMMETRY_PASS_SCORE * 100
-        )}%, 誤差=${mirrorState.MATCHING_TOLERANCE}m`
+          mirrorState.SYMMETRY_PASS_SCORE * 100,
+        )}%, 誤差=${mirrorState.MATCHING_TOLERANCE}m`,
       );
     }
   } catch (e) {
@@ -247,7 +252,7 @@ export function onGridLineSelect() {
  */
 export function onAxisInputMethodChange() {
   const selectedMethod = document.querySelector(
-    'input[name="axisInputMethod"]:checked'
+    'input[name="axisInputMethod"]:checked',
   );
   if (!selectedMethod) return;
 
@@ -388,7 +393,9 @@ export function handleAxisClick(event) {
       if (typeof window.showInlineStatus === "function") {
         window.showInlineStatus("📍 已設定第一點，請點選第二點", "info");
       }
-      console.log(`[對稱軸] 點 1: (${etabsCoord.x.toFixed(3)}, ${etabsCoord.y.toFixed(3)})`);
+      console.log(
+        `[對稱軸] 點 1: (${etabsCoord.x.toFixed(3)}, ${etabsCoord.y.toFixed(3)})`,
+      );
     } else if (mirrorState.axisPinClickCount === 2) {
       mirrorState.axisPoint2 = {
         x: etabsCoord.x,
@@ -406,7 +413,9 @@ export function handleAxisClick(event) {
       if (typeof window.showInlineStatus === "function") {
         window.showInlineStatus("✅ 對稱軸已設定完成", "success");
       }
-      console.log(`[對稱軸] 點 2: (${etabsCoord.x.toFixed(3)}, ${etabsCoord.y.toFixed(3)})`);
+      console.log(
+        `[對稱軸] 點 2: (${etabsCoord.x.toFixed(3)}, ${etabsCoord.y.toFixed(3)})`,
+      );
     }
   }
 }
@@ -420,7 +429,8 @@ export function svgToEtabsCoord(svgX, svgY) {
     return null;
   }
 
-  const { scale, offsetX, offsetY, minX, minY, svgHeight } = savedTransformParams;
+  const { scale, offsetX, offsetY, minX, minY, svgHeight } =
+    savedTransformParams;
   const etabsX = (svgX - offsetX) / scale + minX;
   const etabsY = (svgHeight - offsetY - svgY) / scale + minY;
 
@@ -469,7 +479,10 @@ export function drawAxisPin(svgX, svgY, pinNumber) {
   pin.setAttribute("stroke-width", "2");
   pin.style.filter = "drop-shadow(2px 2px 3px rgba(0,0,0,0.4))";
 
-  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  const circle = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "circle",
+  );
   circle.setAttribute("cx", svgX);
   circle.setAttribute("cy", svgY - pinHeight * 0.65);
   circle.setAttribute("r", pinWidth / 4);
@@ -541,7 +554,7 @@ export function calculateAxisFromTwoPoints() {
   }
 
   const directionRadio = document.querySelector(
-    `input[name="axisDirection"][value="${mirrorState.symmetryAxisDirection}"]`
+    `input[name="axisDirection"][value="${mirrorState.symmetryAxisDirection}"]`,
   );
   if (directionRadio) directionRadio.checked = true;
 
@@ -549,7 +562,7 @@ export function calculateAxisFromTwoPoints() {
   console.log(
     `[對稱軸] 計算結果: ${
       mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y"
-    } = ${mirrorState.userSymmetryAxisValue.toFixed(3)}`
+    } = ${mirrorState.userSymmetryAxisValue.toFixed(3)}`,
   );
 }
 
@@ -588,7 +601,8 @@ export function updateClickAxisPositionDisplay() {
       mirrorState.axisPoint2 &&
       mirrorState.userSymmetryAxisValue !== null
     ) {
-      const axisLabel = mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
+      const axisLabel =
+        mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
       posDisplay.innerHTML = `
         <div style="font-size: 0.85em;">
           <div>📍 點1: (${mirrorState.axisPoint1.x.toFixed(2)}, ${mirrorState.axisPoint1.y.toFixed(2)})</div>
@@ -646,11 +660,14 @@ export function updateAxisDisplay() {
   if (!display) return;
 
   const axisValue =
-    mirrorState.userSymmetryAxisValue ?? mirrorState.detectedSymmetryAxis?.value;
-  const axisLabel = mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
+    mirrorState.userSymmetryAxisValue ??
+    mirrorState.detectedSymmetryAxis?.value;
+  const axisLabel =
+    mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
 
   if (axisValue !== null && axisValue !== undefined) {
-    const source = mirrorState.userSymmetryAxisValue !== null ? "自訂" : "自動偵測";
+    const source =
+      mirrorState.userSymmetryAxisValue !== null ? "自訂" : "自動偵測";
     display.textContent = `目前對稱軸: ${axisLabel} = ${axisValue.toFixed(2)} (${source})`;
   } else {
     display.textContent = `目前對稱軸: -- (尚未偵測)`;
@@ -670,7 +687,8 @@ export function populateSymmetryAxisGridDropdown() {
     mirrorState.symmetryAxisDirection === "vertical"
       ? appState.gridData?.x
       : appState.gridData?.y;
-  const axisLabel = mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
+  const axisLabel =
+    mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y";
 
   if (grids) {
     grids.forEach((grid) => {
@@ -696,7 +714,8 @@ export function drawSymmetryAxisLine() {
   if (!mirrorState.showSymmetryAxisLine) return;
 
   const axisValue =
-    mirrorState.userSymmetryAxisValue ?? mirrorState.detectedSymmetryAxis?.value;
+    mirrorState.userSymmetryAxisValue ??
+    mirrorState.detectedSymmetryAxis?.value;
   if (axisValue === null || axisValue === undefined) return;
 
   const svg = document.getElementById("drawing-svg");
@@ -768,7 +787,7 @@ export function loadSymmetryAxisSettings() {
       mirrorState.showSymmetryAxisLine = settings.showLine ?? true;
 
       console.log(
-        `✓ 已載入對稱軸設定: 方向=${mirrorState.symmetryAxisDirection}, 顯示=${mirrorState.showSymmetryAxisLine} (僅自動偵測)`
+        `✓ 已載入對稱軸設定: 方向=${mirrorState.symmetryAxisDirection}, 顯示=${mirrorState.showSymmetryAxisLine} (僅自動偵測)`,
       );
     }
   } catch (e) {
@@ -784,13 +803,16 @@ export function loadSymmetryAxisSettings() {
  * 自動偵測對稱軸
  */
 export function autoDetectSymmetryAxis() {
-  if (!appState.fullProcessedBeams || appState.fullProcessedBeams.length === 0) {
+  if (
+    !appState.fullProcessedBeams ||
+    appState.fullProcessedBeams.length === 0
+  ) {
     console.log("[對稱軸偵測] 沒有梁資料，跳過偵測");
     return;
   }
 
   const allBeams = appState.fullProcessedBeams.flatMap(
-    (floor) => floor.beams || []
+    (floor) => floor.beams || [],
   );
 
   if (allBeams.length === 0) {
@@ -802,7 +824,7 @@ export function autoDetectSymmetryAxis() {
     allBeams,
     appState.previewJoints,
     appState.gridData,
-    mirrorState.symmetryAxisDirection
+    mirrorState.symmetryAxisDirection,
   );
 
   if (axisValue !== null) {
@@ -813,7 +835,7 @@ export function autoDetectSymmetryAxis() {
     console.log(
       `[對稱軸偵測] ${
         mirrorState.symmetryAxisDirection === "vertical" ? "X" : "Y"
-      } = ${axisValue.toFixed(3)}`
+      } = ${axisValue.toFixed(3)}`,
     );
   } else {
     mirrorState.detectedSymmetryAxis = null;
@@ -831,7 +853,7 @@ export function detectSymmetryAxisWithDirection(
   beams,
   joints,
   gridData,
-  direction = "vertical"
+  direction = "vertical",
 ) {
   if (!beams || beams.length === 0) return null;
 
@@ -883,7 +905,8 @@ export function detectSymmetryAxisWithDirection(
         direction === "vertical" ? (j1.y + j2.y) / 2 : (j1.x + j2.x) / 2;
       const length = Math.sqrt((j2.x - j1.x) ** 2 + (j2.y - j1.y) ** 2);
 
-      if (Math.abs(midCoord - axisCoord) < mirrorState.SYMMETRY_TOLERANCE) return;
+      if (Math.abs(midCoord - axisCoord) < mirrorState.SYMMETRY_TOLERANCE)
+        return;
 
       totalCount++;
 
@@ -895,20 +918,18 @@ export function detectSymmetryAxisWithDirection(
         if (!oj1 || !oj2) return false;
 
         const otherMidCoord =
-          direction === "vertical"
-            ? (oj1.x + oj2.x) / 2
-            : (oj1.y + oj2.y) / 2;
+          direction === "vertical" ? (oj1.x + oj2.x) / 2 : (oj1.y + oj2.y) / 2;
         const otherOtherCoord =
-          direction === "vertical"
-            ? (oj1.y + oj2.y) / 2
-            : (oj1.x + oj2.x) / 2;
+          direction === "vertical" ? (oj1.y + oj2.y) / 2 : (oj1.x + oj2.x) / 2;
         const otherLength = Math.sqrt(
-          (oj2.x - oj1.x) ** 2 + (oj2.y - oj1.y) ** 2
+          (oj2.x - oj1.x) ** 2 + (oj2.y - oj1.y) ** 2,
         );
 
         return (
-          Math.abs(otherMidCoord - mirroredCoord) < mirrorState.MATCHING_TOLERANCE &&
-          Math.abs(otherOtherCoord - otherCoord) < mirrorState.MATCHING_TOLERANCE &&
+          Math.abs(otherMidCoord - mirroredCoord) <
+            mirrorState.MATCHING_TOLERANCE &&
+          Math.abs(otherOtherCoord - otherCoord) <
+            mirrorState.MATCHING_TOLERANCE &&
           Math.abs(otherLength - length) < 1.0
         );
       });
@@ -929,7 +950,7 @@ export function detectSymmetryAxisWithDirection(
       for (const grid of grids) {
         if (Math.abs(bestAxis - grid.ordinate) < SNAP_TOLERANCE) {
           console.log(
-            `[對稱軸偵測] 校正: ${bestAxis.toFixed(3)} → Grid ${grid.name} (${grid.ordinate})`
+            `[對稱軸偵測] 校正: ${bestAxis.toFixed(3)} → Grid ${grid.name} (${grid.ordinate})`,
           );
           bestAxis = grid.ordinate;
           break;
@@ -1026,15 +1047,15 @@ export function detectSymmetryAxis(beams, joints, gridData) {
     console.log(
       `[智能偵測] 找到對稱軸 X=${bestAxis.toFixed(3)}, 對稱分數: ${(
         bestScore * 100
-      ).toFixed(1)}%`
+      ).toFixed(1)}%`,
     );
     return bestAxis;
   }
 
   console.log(
     `[智能偵測] 未找到明顯對稱結構 (最高分數: ${(bestScore * 100).toFixed(
-      1
-    )}%)`
+      1,
+    )}%)`,
   );
   return null;
 }
@@ -1118,7 +1139,7 @@ export function updateMirrorStatusText() {
 
   if (document.getElementById("mirrorModeToggle")?.checked) {
     statusText.innerHTML = `已啟用：及格 ${Math.round(
-      mirrorState.SYMMETRY_PASS_SCORE * 100
+      mirrorState.SYMMETRY_PASS_SCORE * 100,
     )}% | 誤差 ${mirrorState.MATCHING_TOLERANCE.toFixed(2)}m`;
   } else {
     statusText.textContent = "未啟用";

@@ -1,11 +1,11 @@
 /**
  * BEAM-NAMINGTOOL - 固定編號功能模組
- * 
+ *
  * 此模組處理固定編號（例如：樓梯梁 sb25×50 → g1）
  * 讓特定尺寸的梁使用固定的編號
  */
 
-import { appState } from '../config/constants.js';
+import { appState } from "../config/constants.js";
 
 // ============================================
 // 本地狀態（與 appState.fixedLabelRules 同步）
@@ -34,7 +34,7 @@ export function saveFixedLabelRules() {
   try {
     localStorage.setItem(
       "fixedLabelRules",
-      JSON.stringify(appState.fixedLabelRules)
+      JSON.stringify(appState.fixedLabelRules),
     );
     console.log("✓ 已儲存固定編號規則");
   } catch (e) {
@@ -85,7 +85,7 @@ export function closeFixedLabelModal() {
 export function updateFixedLabelSummary() {
   const summaryDiv = document.getElementById("fixedLabelSummary");
   if (!summaryDiv) return;
-  
+
   if (appState.fixedLabelRules.length === 0) {
     summaryDiv.innerHTML =
       '<span style="color: var(--theme-text-secondary);">尚未設定任何規則</span>';
@@ -177,7 +177,7 @@ export function updateFixedLabelModalList() {
         <span style="width: 120px; color: var(--theme-accent); font-weight: 500;">${rule.label}</span>
         <button onclick="removeFixedLabelRuleModal(${index})" class="btn-export" style="padding: 6px 12px; font-size: 0.85em;">刪除</button>
       </div>
-    `
+    `,
     )
     .join("");
 }

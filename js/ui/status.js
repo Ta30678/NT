@@ -1,6 +1,6 @@
 /**
  * BEAM-NAMINGTOOL - UI 狀態管理模組
- * 
+ *
  * 此模組負責：
  * - 顯示/隱藏內嵌狀態訊息
  * - 字體大小控制
@@ -15,22 +15,22 @@
  * @param {string} message - 要顯示的訊息
  * @param {string} type - 訊息類型 ('success' | 'error' | 'info')
  */
-export function showInlineStatus(message, type = 'success') {
-  const statusInline = document.getElementById('status-inline');
+export function showInlineStatus(message, type = "success") {
+  const statusInline = document.getElementById("status-inline");
   if (!statusInline) return;
 
   statusInline.innerHTML = `<p>${message}</p>`;
-  statusInline.style.display = 'block';
+  statusInline.style.display = "block";
 }
 
 /**
  * 隱藏內嵌狀態訊息
  */
 export function hideInlineStatus() {
-  const statusInline = document.getElementById('status-inline');
+  const statusInline = document.getElementById("status-inline");
   if (statusInline) {
-    statusInline.style.display = 'none';
-    statusInline.innerHTML = '';
+    statusInline.style.display = "none";
+    statusInline.innerHTML = "";
   }
 }
 
@@ -43,20 +43,20 @@ export function hideInlineStatus() {
  * @param {Function} handleStoryChange - 用於重新繪製的函數（可選）
  */
 export function updateFontSize(handleStoryChange = null) {
-  const fontSizeInput = document.getElementById('fontSizeInput');
+  const fontSizeInput = document.getElementById("fontSizeInput");
   if (!fontSizeInput) return;
 
   const newFontSize = parseInt(fontSizeInput.value) || 14;
-  
+
   // 更新全域變數
   window.currentFontSize = newFontSize;
-  
-  console.log('字體大小已更新為:', newFontSize);
+
+  console.log("字體大小已更新為:", newFontSize);
 
   // 重新繪製圖表以應用新的字體大小
   // 優先使用傳入的函數，否則使用全域的 handleStoryChange
   const redrawFn = handleStoryChange || window.handleStoryChange;
-  if (typeof redrawFn === 'function') {
+  if (typeof redrawFn === "function") {
     redrawFn();
   }
 }
@@ -65,10 +65,10 @@ export function updateFontSize(handleStoryChange = null) {
  * 初始化字體大小滾輪支援
  */
 export function initFontSizeWheelSupport() {
-  const fontSizeInput = document.getElementById('fontSizeInput');
+  const fontSizeInput = document.getElementById("fontSizeInput");
   if (!fontSizeInput) return;
 
-  fontSizeInput.addEventListener('wheel', function (e) {
+  fontSizeInput.addEventListener("wheel", function (e) {
     e.preventDefault();
 
     const delta = e.deltaY > 0 ? -1 : 1;

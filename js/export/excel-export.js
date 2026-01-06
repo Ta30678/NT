@@ -2,9 +2,9 @@
  * BEAM-NAMINGTOOL - Excel 匯出模組
  */
 
-import { appState } from '../config/constants.js';
-import { createStandardFloorGroups } from '../core/beam-labeler.js';
-import { summarizeFloors } from '../utils/formatting.js';
+import { appState } from "../config/constants.js";
+import { createStandardFloorGroups } from "../core/beam-labeler.js";
+import { summarizeFloors } from "../utils/formatting.js";
 
 /**
  * 匯出 Excel 報表
@@ -23,7 +23,7 @@ export function exportToExcel() {
 
   for (const group of standardFloorGroups) {
     const beamsInGroup = fullProcessedBeams.filter((b) =>
-      group.includes(b.story)
+      group.includes(b.story),
     );
 
     if (group.length === 1) {
@@ -80,19 +80,18 @@ export function exportToExcel() {
     } else {
       // 如果沒有標記，從 fullProcessedBeams 中找到對應的梁，使用其 prop 判斷
       const correspondingBeam = fullProcessedBeams.find(
-        (b) => b.name === item.etabsLabel && b.newLabel === item.newLabel
+        (b) => b.name === item.etabsLabel && b.newLabel === item.newLabel,
       );
 
       if (correspondingBeam && correspondingBeam.prop) {
         // 使用 frame section 判斷：包含 SB 或 FSB 的是小梁（支援 4sb、3.5sb 等格式）
         isSecondaryBeam = /(\d+\.?\d*\s*)?(SB|FSB)/i.test(
-          correspondingBeam.prop
+          correspondingBeam.prop,
         );
       } else {
         // 如果找不到對應梁或沒有 prop，使用編號作為最後的備選判斷
         // 小梁：b 開頭（小寫）
-        isSecondaryBeam =
-          item.newLabel && item.newLabel.charAt(0) === "b";
+        isSecondaryBeam = item.newLabel && item.newLabel.charAt(0) === "b";
       }
     }
 
@@ -112,7 +111,7 @@ export function exportToExcel() {
   });
 
   // Check if XLSX is available
-  if (typeof window.XLSX === 'undefined') {
+  if (typeof window.XLSX === "undefined") {
     alert("Excel 上傳插件尚未載入，請稍後再試。");
     return;
   }

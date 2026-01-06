@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,6 @@
     <!-- JavaScript 模組 - 模組化重構 -->
     <!-- 使用 getter/setter 橋接 window 變數，與原始代碼共享資料 -->
     <script type="module" src="js/main.js"></script>
-
   </head>
   <body>
     <div id="container">
@@ -262,8 +261,10 @@
                 padding: 0;
                 flex-shrink: 0;
               "
-              onmouseover="this.style.backgroundColor='var(--theme-accent-hover)'"
-              onmouseout="this.style.backgroundColor='var(--theme-accent)'"
+              onmouseover="
+                this.style.backgroundColor = 'var(--theme-accent-hover)'
+              "
+              onmouseout="this.style.backgroundColor = 'var(--theme-accent)'"
               title="格線編號說明"
             >
               💡
@@ -300,6 +301,30 @@
               </button>
               <span
                 id="mirrorStatusText"
+                style="font-size: 0.85em; color: #1e293b; font-weight: 500"
+              ></span>
+            </div>
+            <!-- 小梁編號設定按鈕列 -->
+            <div style="display: flex; gap: 10px; align-items: center">
+              <button
+                id="secondaryBeamConfigBtn"
+                onclick="openSecondaryBeamConfigModal()"
+                style="
+                  padding: 8px 16px;
+                  font-size: 0.9em;
+                  font-weight: 600;
+                  background: #1e293b;
+                  color: #ffffff;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  min-width: 90px;
+                "
+              >
+                BEAM#
+              </button>
+              <span
+                id="secondaryBeamConfigStatusText"
                 style="font-size: 0.85em; color: #1e293b; font-weight: 500"
               ></span>
             </div>
@@ -486,8 +511,10 @@
                 padding: 0;
                 flex-shrink: 0;
               "
-              onmouseover="this.style.backgroundColor='var(--theme-accent-hover)'"
-              onmouseout="this.style.backgroundColor='var(--theme-accent)'"
+              onmouseover="
+                this.style.backgroundColor = 'var(--theme-accent-hover)'
+              "
+              onmouseout="this.style.backgroundColor = 'var(--theme-accent)'"
               title="選取功能說明"
             >
               ?
@@ -737,7 +764,7 @@
               font-size: 14px;
             "
             placeholder="例如: B65, B1, G2A..."
-            onkeypress="if(event.key === 'Enter') searchMember()"
+            onkeypress="if (event.key === 'Enter') searchMember();"
           />
           <button
             class="btn-process"
@@ -871,6 +898,163 @@
         "
       >
         <button class="btn-export" onclick="closeFixedLabelModal()">
+          關閉
+        </button>
+      </div>
+    </div>
+
+    <!-- 小梁編號設定對話框 -->
+    <div
+      id="secondary-beam-config-overlay"
+      class="dialog-overlay"
+      onclick="closeSecondaryBeamConfigModal()"
+    ></div>
+    <div
+      id="secondary-beam-config-dialog"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10002;
+        background: var(--theme-surface);
+        border: 1px solid var(--theme-border);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        min-width: 400px;
+        max-width: 500px;
+      "
+    >
+      <h3 style="margin-top: 0">🔢 小梁編號設定</h3>
+      <p
+        style="
+          color: var(--theme-text-secondary);
+          margin-bottom: 15px;
+          font-size: 0.9em;
+        "
+      >
+        💡 自訂小梁編號的起始值<br />
+        • <strong>預設規則</strong>：水平小梁從 b1
+        開始，垂直小梁無條件進位至下一個十位數（如 b54 → b61）<br />
+        • <strong>啟用客製化</strong>後可自訂水平與垂直小梁各自的起始編號
+      </p>
+
+      <!-- 啟用開關 -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 20px;
+          padding: 12px;
+          background: var(--theme-bg);
+          border-radius: 8px;
+        "
+      >
+        <label style="font-weight: 600; color: var(--theme-text-primary)"
+          >啟用客製化起始編號</label
+        >
+        <label class="switch" style="margin-left: auto">
+          <input
+            type="checkbox"
+            id="secondaryBeamUseCustomToggle"
+            onchange="toggleSecondaryBeamCustomStart()"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 設定區塊 -->
+      <div id="secondary-beam-config-section" style="display: none">
+        <!-- 水平小梁起始編號 -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--theme-bg);
+            border-radius: 8px;
+          "
+        >
+          <label style="flex: 1; color: var(--theme-text-primary)"
+            >水平小梁起始編號 (b)</label
+          >
+          <input
+            type="number"
+            id="horizontalBeamStartInput"
+            value="1"
+            min="1"
+            style="
+              width: 80px;
+              padding: 8px 12px;
+              border: 1px solid var(--theme-border);
+              border-radius: 6px;
+              background-color: #ffffff;
+              color: var(--theme-text-primary);
+              text-align: center;
+            "
+            onchange="updateSecondaryBeamConfig()"
+          />
+        </div>
+
+        <!-- 垂直小梁起始編號 -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--theme-bg);
+            border-radius: 8px;
+          "
+        >
+          <label style="flex: 1; color: var(--theme-text-primary)"
+            >垂直小梁起始編號 (b)</label
+          >
+          <input
+            type="number"
+            id="verticalBeamStartInput"
+            value=""
+            min="1"
+            placeholder="留空=進位"
+            style="
+              width: 100px;
+              padding: 8px 12px;
+              border: 1px solid var(--theme-border);
+              border-radius: 6px;
+              background-color: #ffffff;
+              color: var(--theme-text-primary);
+              text-align: center;
+            "
+            onchange="updateSecondaryBeamConfig()"
+          />
+        </div>
+
+        <p
+          style="
+            color: var(--theme-text-secondary);
+            font-size: 0.85em;
+            margin-bottom: 0;
+          "
+        >
+          ⚠️ 垂直小梁起始編號留空表示使用預設的無條件進位規則
+        </p>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+          margin-top: 20px;
+        "
+      >
+        <button class="btn-export" onclick="closeSecondaryBeamConfigModal()">
           關閉
         </button>
       </div>
@@ -1022,7 +1206,6 @@
       // [已模組化] 常數定義 (INITIAL_*) 和 calculateOffset 已移至 js/config/constants.js
       // 由 main.js 掛載到 window，本地不再需要定義
 
-
       var panZoomInstance = null;
       var fullProcessedBeams = [];
       var fullDrawableBeams = [];
@@ -1060,7 +1243,6 @@
       // constants.js 中的 mirrorState 會自動與 window 上的這些變數同步 (如果存在)
       // 但現在我們移除本地 let 定義，讓所有存取直接走 window 或 mirrorState
 
-
       // [新增] 標準層群組快取
       // [新增] 標準層群組快取
       var standardFloorGroupsCache = null;
@@ -1081,9 +1263,18 @@
 
       // [修復] Mirror 功能所需的容差常數 - 使用 var 確保全域作用域
       // 如果 mirrorState 已載入則使用其值，否則使用預設值
-      var SYMMETRY_PASS_SCORE = (typeof window.mirrorState !== 'undefined' && window.mirrorState.SYMMETRY_PASS_SCORE) || 0.7;
-      var SYMMETRY_TOLERANCE = (typeof window.mirrorState !== 'undefined' && window.mirrorState.SYMMETRY_TOLERANCE) || 0.5;
-      var MATCHING_TOLERANCE = (typeof window.mirrorState !== 'undefined' && window.mirrorState.MATCHING_TOLERANCE) || 0.8;
+      var SYMMETRY_PASS_SCORE =
+        (typeof window.mirrorState !== "undefined" &&
+          window.mirrorState.SYMMETRY_PASS_SCORE) ||
+        0.7;
+      var SYMMETRY_TOLERANCE =
+        (typeof window.mirrorState !== "undefined" &&
+          window.mirrorState.SYMMETRY_TOLERANCE) ||
+        0.5;
+      var MATCHING_TOLERANCE =
+        (typeof window.mirrorState !== "undefined" &&
+          window.mirrorState.MATCHING_TOLERANCE) ||
+        0.8;
 
       // [新增] 字體大小控制
       var currentFontSize = 14; // 預設字體大小（像素） - changed to var to expose to window
@@ -1151,33 +1342,27 @@
       // [已模組化] initSymmetrySettingsWheelSupport, updateSymmetrySettings 等函數已移至 js/features/mirror-mode.js
       // 由 main.js 掛載到 window
 
-
       // ============ [新增] 對稱軸設定相關函數 ============
 
       // [已模組化] toggleSymmetryAxisLine ~ onAxisInputMethodChange 已移至 js/features/mirror-mode.js
 
-
       // [已模組化] 點選模式相關函數已移至 js/features/mirror-mode.js
-
 
       // [新增] 儲存的座標轉換參數（供反向轉換使用）
       let savedTransformParams = null;
 
       // [已模組化] svgToEtabsCoord, updateAxisDisplay, populateSymmetryAxisGridDropdown 等已移至 js/features/mirror-mode.js
 
-
       // [已模組化] detectSymmetryAxisWithDirection 已移至 js/features/mirror-mode.js
 
-
       // [已模組化] drawSymmetryAxisLine, Modal 相關函數已移至 js/features/mirror-mode.js
-
 
       // [新增] 格線編號說明提示
       function toggleGridConfigHelp() {
         // 檢查是否已有提示框
         const existingHelp = document.getElementById("grid-config-help-popup");
         const existingOverlay = document.getElementById(
-          "grid-config-help-overlay"
+          "grid-config-help-overlay",
         );
         if (existingHelp) {
           existingHelp.remove();
@@ -1248,6 +1433,192 @@
       // [新增] 固定編號功能函數
       // [已模組化] Fixed Label 功能 (toggleFixedLabelConfig, addFixedLabelRuleModal 等) 已移至 js/features/fixed-label.js
 
+      // ============================================
+      // [新增] 小梁編號設定功能
+      // ============================================
+
+      /**
+       * 開啟小梁編號設定對話框
+       */
+      function openSecondaryBeamConfigModal() {
+        const overlay = document.getElementById(
+          "secondary-beam-config-overlay",
+        );
+        const dialog = document.getElementById("secondary-beam-config-dialog");
+
+        if (overlay && dialog) {
+          overlay.style.display = "block";
+          dialog.style.display = "block";
+
+          // 初始化 UI 狀態
+          loadSecondaryBeamConfig();
+        }
+      }
+
+      /**
+       * 關閉小梁編號設定對話框
+       */
+      function closeSecondaryBeamConfigModal() {
+        const overlay = document.getElementById(
+          "secondary-beam-config-overlay",
+        );
+        const dialog = document.getElementById("secondary-beam-config-dialog");
+
+        if (overlay) overlay.style.display = "none";
+        if (dialog) dialog.style.display = "none";
+
+        // 儲存設定
+        saveSecondaryBeamConfig();
+      }
+
+      /**
+       * 切換客製化起始編號開關
+       */
+      function toggleSecondaryBeamCustomStart() {
+        const toggle = document.getElementById("secondaryBeamUseCustomToggle");
+        const configSection = document.getElementById(
+          "secondary-beam-config-section",
+        );
+
+        if (toggle && configSection) {
+          const useCustom = toggle.checked;
+          configSection.style.display = useCustom ? "block" : "none";
+
+          // 更新設定
+          if (window.secondaryBeamConfig) {
+            window.secondaryBeamConfig.useCustomStart = useCustom;
+          }
+
+          // 更新狀態文字
+          updateSecondaryBeamStatusText();
+        }
+      }
+
+      /**
+       * 更新小梁編號設定
+       */
+      function updateSecondaryBeamConfig() {
+        const horizontalInput = document.getElementById(
+          "horizontalBeamStartInput",
+        );
+        const verticalInput = document.getElementById("verticalBeamStartInput");
+
+        if (window.secondaryBeamConfig) {
+          // 水平小梁起始編號
+          const horizontalValue = parseInt(horizontalInput?.value) || 1;
+          window.secondaryBeamConfig.horizontalStart = horizontalValue;
+
+          // 垂直小梁起始編號（空值表示使用預設進位規則）
+          const verticalValue = verticalInput?.value
+            ? parseInt(verticalInput.value)
+            : null;
+          window.secondaryBeamConfig.verticalStart = verticalValue;
+
+          console.log("[小梁編號設定] 已更新:", {
+            horizontal: horizontalValue,
+            vertical: verticalValue || "無條件進位",
+          });
+
+          // 更新狀態文字
+          updateSecondaryBeamStatusText();
+        }
+      }
+
+      /**
+       * 儲存小梁編號設定到 localStorage
+       */
+      function saveSecondaryBeamConfig() {
+        if (window.secondaryBeamConfig) {
+          const config = {
+            useCustomStart: window.secondaryBeamConfig.useCustomStart,
+            horizontalStart: window.secondaryBeamConfig.horizontalStart,
+            verticalStart: window.secondaryBeamConfig.verticalStart,
+          };
+          localStorage.setItem("secondaryBeamConfig", JSON.stringify(config));
+          console.log("[小梁編號設定] 已儲存:", config);
+        }
+      }
+
+      /**
+       * 從 localStorage 載入小梁編號設定
+       */
+      function loadSecondaryBeamConfig() {
+        try {
+          const saved = localStorage.getItem("secondaryBeamConfig");
+          if (saved) {
+            const config = JSON.parse(saved);
+
+            if (window.secondaryBeamConfig) {
+              window.secondaryBeamConfig.useCustomStart =
+                config.useCustomStart || false;
+              window.secondaryBeamConfig.horizontalStart =
+                config.horizontalStart || 1;
+              window.secondaryBeamConfig.verticalStart = config.verticalStart;
+            }
+
+            // 更新 UI
+            const toggle = document.getElementById(
+              "secondaryBeamUseCustomToggle",
+            );
+            const configSection = document.getElementById(
+              "secondary-beam-config-section",
+            );
+            const horizontalInput = document.getElementById(
+              "horizontalBeamStartInput",
+            );
+            const verticalInput = document.getElementById(
+              "verticalBeamStartInput",
+            );
+
+            if (toggle) toggle.checked = config.useCustomStart || false;
+            if (configSection)
+              configSection.style.display = config.useCustomStart
+                ? "block"
+                : "none";
+            if (horizontalInput)
+              horizontalInput.value = config.horizontalStart || 1;
+            if (verticalInput) verticalInput.value = config.verticalStart || "";
+
+            console.log("[小梁編號設定] 已載入:", config);
+          }
+        } catch (e) {
+          console.warn("[小梁編號設定] 載入失敗:", e);
+        }
+
+        // 更新狀態文字
+        updateSecondaryBeamStatusText();
+      }
+
+      /**
+       * 更新小梁編號設定狀態文字
+       */
+      function updateSecondaryBeamStatusText() {
+        const statusText = document.getElementById(
+          "secondaryBeamConfigStatusText",
+        );
+        if (!statusText) return;
+
+        if (
+          window.secondaryBeamConfig &&
+          window.secondaryBeamConfig.useCustomStart
+        ) {
+          const h = window.secondaryBeamConfig.horizontalStart || 1;
+          const v = window.secondaryBeamConfig.verticalStart;
+          statusText.textContent = `水平: b${h} 起, 垂直: ${v ? "b" + v + " 起" : "進位"}`;
+          statusText.style.color = "#059669"; // 綠色表示已啟用
+        } else {
+          statusText.textContent = "預設規則";
+          statusText.style.color = "#1e293b";
+        }
+      }
+
+      // 在頁面載入時初始化小梁編號設定
+      document.addEventListener("DOMContentLoaded", function () {
+        // 延遲載入，確保 secondaryBeamConfig 已可用
+        setTimeout(function () {
+          loadSecondaryBeamConfig();
+        }, 100);
+      });
 
       // [新增] 預覽檔案函式
       async function previewFile() {
@@ -1304,7 +1675,7 @@
 
           // 解析樓層
           const storySectionMatch = previewFileContent.match(
-            /\$ STORIES - IN SEQUENCE FROM TOP([\s\S]*?)(?=\$|$)/i
+            /\$ STORIES - IN SEQUENCE FROM TOP([\s\S]*?)(?=\$|$)/i,
           );
           if (!storySectionMatch) throw new Error("找不到樓層定義");
 
@@ -1361,10 +1732,10 @@
           // [修改] 顯示狀態訊息到控制列的內嵌區域
           showInlineStatus(
             `✅ 預覽完成！找到 ${availableStories.length} 個樓層，${allBeamsAcrossStories.length} 根梁`,
-            "success"
+            "success",
           );
           console.log(
-            `[DEBUG] Preview completed: ${availableStories.length} floors, ${allBeamsAcrossStories.length} beams`
+            `[DEBUG] Preview completed: ${availableStories.length} floors, ${allBeamsAcrossStories.length} beams`,
           );
 
           // 啟用「設定編號規則並執行」按鈕
@@ -1398,7 +1769,7 @@
         const getSavedValue = (axis, gridName, defaultIndex) => {
           if (userGridConfig && userGridConfig[axis]) {
             const savedConfig = userGridConfig[axis].find(
-              (c) => c.name === gridName
+              (c) => c.name === gridName,
             );
             if (savedConfig) {
               if (savedConfig.serialValue === null) {
@@ -1430,8 +1801,39 @@
         [...gridData.x, ...gridData.y].forEach((g) => {
           if (g.name.length > globalMaxLen) globalMaxLen = g.name.length;
         });
-        // 統一圓的直徑（基於最長名稱，最小 60px，確保所有系統一致）
-        const globalCircleSize = Math.max(60, 40 + globalMaxLen * 10);
+
+        // [響應式] 根據螢幕寬度和格線名稱長度動態計算圓的大小
+        const screenWidth = window.innerWidth;
+        const containerWidth =
+          document.getElementById("grid-config-panel")?.offsetWidth ||
+          screenWidth * 0.8;
+
+        // 計算基礎圓形大小（根據名稱長度）
+        let baseCircleSize = 40 + globalMaxLen * 8; // 減少每個字元的增量從 10 到 8
+
+        // 根據容器寬度限制最大圓形大小
+        // 每排顯示 5 個圓，需要考慮間距 (12px * 4 = 48px)
+        const maxCircleSize = (containerWidth - 48) / 5;
+
+        // 應用響應式縮放
+        let scaledCircleSize = baseCircleSize;
+        if (screenWidth < 1200) {
+          // 小螢幕：縮小 20%
+          scaledCircleSize = baseCircleSize * 0.8;
+        } else if (screenWidth < 1600) {
+          // 中等螢幕：縮小 10%
+          scaledCircleSize = baseCircleSize * 0.9;
+        }
+
+        // 最終大小：在 50px 到 maxCircleSize 之間
+        const globalCircleSize = Math.max(
+          50,
+          Math.min(scaledCircleSize, maxCircleSize),
+        );
+
+        console.log(
+          `[格線配置] 螢幕寬度: ${screenWidth}px, 容器寬度: ${containerWidth}px, 圓形大小: ${globalCircleSize}px`,
+        );
 
         // 輔助函數：按 COORDSYSTEM 分組生成格線配置 HTML (圓形分割設計)
         const generateGridConfigHTML = (grids, axis) => {
@@ -1448,7 +1850,7 @@
             if (cardsInGroup.length > 0) {
               // [修正] 使用 CSS Grid 固定每排 5 顆圓，置中對齊
               html += `<div style="display: grid; grid-template-columns: repeat(5, ${circleSize}px); gap: 12px; margin-bottom: 15px; justify-content: center;">${cardsInGroup.join(
-                ""
+                "",
               )}</div>`;
               cardsInGroup = [];
             }
@@ -1478,8 +1880,8 @@
               circleSize <= 60
                 ? "0.85em"
                 : circleSize <= 70
-                ? "0.8em"
-                : "0.75em";
+                  ? "0.8em"
+                  : "0.75em";
             const inputFontSize = circleSize <= 60 ? "0.9em" : "0.85em";
 
             // 圓形分割設計：上半圓顯示 Grid 名稱，下半圓顯示可編輯流水號
@@ -1558,10 +1960,12 @@
 
         // [新增] 為所有輸入框添加自動順號事件
         // 使用模組化函數（由 main.js 掛載到 window）
-        if (typeof window.attachAutoIncrementListeners === 'function') {
+        if (typeof window.attachAutoIncrementListeners === "function") {
           window.attachAutoIncrementListeners();
         } else {
-          console.warn('[showGridConfig] attachAutoIncrementListeners not loaded yet');
+          console.warn(
+            "[showGridConfig] attachAutoIncrementListeners not loaded yet",
+          );
         }
 
         panel.style.display = "block";
@@ -1569,7 +1973,6 @@
 
       // [已模組化] AutoIncrement 相關函數 (attachAutoIncrementListeners, handleAutoIncrement) 已移至 js/features/batch-edit.js
       // 由 main.js 掛載到 window
-
 
       // [新增] 套用使用者配置
       function applyGridConfig() {
@@ -1629,7 +2032,7 @@
         try {
           localStorage.setItem(
             "userGridConfig",
-            JSON.stringify(userGridConfig)
+            JSON.stringify(userGridConfig),
           );
           console.log("✓ 已儲存格線編號規則");
         } catch (e) {
@@ -1736,8 +2139,8 @@
               isVisible ? "active" : ""
             }" onclick="toggleGridSystem('${systemName}')">
               <input type="checkbox" id="toggle-${systemName}" ${
-            isVisible ? "checked" : ""
-          }>
+                isVisible ? "checked" : ""
+              }>
               <div class="toggle-switch-slider"></div>
             </div>
           `;
@@ -1786,16 +2189,16 @@
 
         // 找出所有該 COORDSYSTEM 的 bubble, text, connector, grid line
         const bubbles = svg.querySelectorAll(
-          `.grid-bubble[data-coordsystem="${systemName}"]`
+          `.grid-bubble[data-coordsystem="${systemName}"]`,
         );
         const texts = svg.querySelectorAll(
-          `.grid-bubble-text[data-coordsystem="${systemName}"]`
+          `.grid-bubble-text[data-coordsystem="${systemName}"]`,
         );
         const connectors = svg.querySelectorAll(
-          `.grid-bubble-connector[data-coordsystem="${systemName}"]`
+          `.grid-bubble-connector[data-coordsystem="${systemName}"]`,
         );
         const gridLines = svg.querySelectorAll(
-          `.grid-line-element[data-coordsystem="${systemName}"]`
+          `.grid-line-element[data-coordsystem="${systemName}"]`,
         );
 
         // 切換 hidden class
@@ -1823,16 +2226,16 @@
 
           // 隱藏該系統的所有元素
           const bubbles = svg.querySelectorAll(
-            `.grid-bubble[data-coordsystem="${systemName}"]`
+            `.grid-bubble[data-coordsystem="${systemName}"]`,
           );
           const texts = svg.querySelectorAll(
-            `.grid-bubble-text[data-coordsystem="${systemName}"]`
+            `.grid-bubble-text[data-coordsystem="${systemName}"]`,
           );
           const connectors = svg.querySelectorAll(
-            `.grid-bubble-connector[data-coordsystem="${systemName}"]`
+            `.grid-bubble-connector[data-coordsystem="${systemName}"]`,
           );
           const gridLines = svg.querySelectorAll(
-            `.grid-line-element[data-coordsystem="${systemName}"]`
+            `.grid-line-element[data-coordsystem="${systemName}"]`,
           );
 
           [bubbles, texts, connectors, gridLines].forEach((elements) => {
@@ -1876,7 +2279,7 @@
         const hitareas = svg.querySelectorAll(".grid-bubble-hitarea.draggable");
         console.log(
           "[DEBUG] Bubble dragging initialized successfully, hitareas:",
-          hitareas.length
+          hitareas.length,
         );
       }
 
@@ -1940,13 +2343,13 @@
         });
 
         const bubbles = svg.querySelectorAll(
-          `.grid-bubble[data-coordsystem="${coordsystem}"]`
+          `.grid-bubble[data-coordsystem="${coordsystem}"]`,
         ); // [新增] 查找真正的 bubble
         const texts = svg.querySelectorAll(
-          `.grid-bubble-text[data-coordsystem="${coordsystem}"]`
+          `.grid-bubble-text[data-coordsystem="${coordsystem}"]`,
         );
         const connectors = svg.querySelectorAll(
-          `.grid-bubble-connector[data-coordsystem="${coordsystem}"]`
+          `.grid-bubble-connector[data-coordsystem="${coordsystem}"]`,
         );
 
         console.log("[DEBUG] Hitarea mousedown:", {
@@ -2003,7 +2406,7 @@
           console.warn(
             "[WARN] No matching bubble found at",
             hitareaCx,
-            hitareaCy
+            hitareaCy,
           );
           return;
         }
@@ -2011,7 +2414,7 @@
           console.warn(
             "[WARN] No matching connector found for bubble at",
             hitareaCx,
-            hitareaCy
+            hitareaCy,
           );
           return;
         }
@@ -2050,7 +2453,7 @@
         const connectorDx = dragState.gridLineEnd.x - hitareaCx;
         const connectorDy = dragState.gridLineEnd.y - hitareaCy;
         const connectorLength = Math.sqrt(
-          connectorDx * connectorDx + connectorDy * connectorDy
+          connectorDx * connectorDx + connectorDy * connectorDy,
         );
 
         // connector 的單位向量
@@ -2075,7 +2478,7 @@
           "[DEBUG] Grid line direction:",
           dragState.gridLineDirection,
           "Connector unit:",
-          { x: connectorUnitX, y: connectorUnitY }
+          { x: connectorUnitX, y: connectorUnitY },
         );
 
         // [修正] 設定統一的最大拖曳距離，確保所有 BUBBLE 有相同的移動感受
@@ -2103,7 +2506,7 @@
           "maxDistance:",
           dragState.maxDragDistance,
           "isDragging:",
-          dragState.isDragging
+          dragState.isDragging,
         );
       }
 
@@ -2152,7 +2555,7 @@
         // 限制在 ±maxDragDistance 範圍內
         const clampedLength = Math.max(
           -dragState.maxDragDistance,
-          Math.min(dragState.maxDragDistance, projectionLength)
+          Math.min(dragState.maxDragDistance, projectionLength),
         );
 
         // 計算新的 bubble 位置（從原始位置沿 connector 方向偏移）
@@ -2201,7 +2604,7 @@
 
           // [新增] 檢查 bubble 是否真的移動了（避免點擊時的跳動）
           const movedDistance = Math.sqrt(
-            (currentX - targetX) ** 2 + (currentY - targetY) ** 2
+            (currentX - targetX) ** 2 + (currentY - targetY) ** 2,
           );
 
           // 如果移動距離小於 1 像素，視為沒有移動，直接重置狀態不執行動畫
@@ -2333,7 +2736,6 @@
       // [已模組化] getSVGPoint 已移至 js/utils/coord-transform.js
       // 由 main.js 掛載到 window.getSVGPoint
 
-
       // ============ 梁標籤拖曳功能 ============
       // [新增] 梁標籤拖曳狀態
       let beamLabelDragState = {
@@ -2424,7 +2826,7 @@
         console.log(
           "[DEBUG] Started dragging beam label:",
           beamName,
-          orientation
+          orientation,
         );
       }
 
@@ -2442,7 +2844,7 @@
         pendingBeamLabelEvent = e;
         if (!beamLabelAnimationFrameId) {
           beamLabelAnimationFrameId = requestAnimationFrame(
-            updateBeamLabelPosition
+            updateBeamLabelPosition,
           );
         }
       }
@@ -2521,7 +2923,7 @@
         // 限制在最大拖曳範圍內
         const clampedLength = Math.max(
           -beamLabelDragState.maxDragDistance,
-          Math.min(beamLabelDragState.maxDragDistance, projectionLength)
+          Math.min(beamLabelDragState.maxDragDistance, projectionLength),
         );
 
         // 更新自訂偏移量
@@ -2549,13 +2951,13 @@
         const transform = label.getAttribute("transform");
         if (transform && transform.includes("rotate")) {
           const rotateMatch = transform.match(
-            /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/
+            /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/,
           );
           if (rotateMatch) {
             const angle = rotateMatch[1];
             label.setAttribute(
               "transform",
-              `rotate(${angle}, ${newX}, ${newY})`
+              `rotate(${angle}, ${newX}, ${newY})`,
             );
           }
         }
@@ -2582,13 +2984,13 @@
 
         // 檢查標籤是否真的移動了
         const movedDistance = Math.sqrt(
-          (currentX - targetX) ** 2 + (currentY - targetY) ** 2
+          (currentX - targetX) ** 2 + (currentY - targetY) ** 2,
         );
 
         // 如果移動距離小於 1 像素，視為沒有移動（點擊）
         if (movedDistance < 1) {
           console.log(
-            "[DEBUG] Label didn't move, treating as click - triggering selection"
+            "[DEBUG] Label didn't move, treating as click - triggering selection",
           );
 
           // 直接移除樣式
@@ -2668,13 +3070,13 @@
             const transform = label.getAttribute("transform");
             if (transform && transform.includes("rotate")) {
               const rotateMatch = transform.match(
-                /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/
+                /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/,
               );
               if (rotateMatch) {
                 const angle = rotateMatch[1];
                 label.setAttribute(
                   "transform",
-                  `rotate(${angle}, ${targetX}, ${targetY})`
+                  `rotate(${angle}, ${targetX}, ${targetY})`,
                 );
               }
             }
@@ -2701,13 +3103,13 @@
           const transform = label.getAttribute("transform");
           if (transform && transform.includes("rotate")) {
             const rotateMatch = transform.match(
-              /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/
+              /rotate\(([^,]+),\s*([^,]+),\s*([^)]+)\)/,
             );
             if (rotateMatch) {
               const angle = rotateMatch[1];
               label.setAttribute(
                 "transform",
-                `rotate(${angle}, ${currentX}, ${currentY})`
+                `rotate(${angle}, ${currentX}, ${currentY})`,
               );
             }
           }
@@ -2736,7 +3138,7 @@
           "[DEBUG] Stopped dragging beam label:",
           beamName,
           "offset:",
-          beamLabelDragState.customOffset
+          beamLabelDragState.customOffset,
         );
 
         // 重置拖曳狀態
@@ -2797,7 +3199,7 @@
 
         console.log(
           "[DEBUG] Middle mouse pan started at:",
-          middleMouseStartPos
+          middleMouseStartPos,
         );
       }
 
@@ -2886,16 +3288,16 @@
           const secondaryBeams = allBeamsAcrossStories.filter(
             (b) =>
               b.prop.toUpperCase().startsWith("SB") &&
-              !b.prop.toUpperCase().startsWith("FSB")
+              !b.prop.toUpperCase().startsWith("FSB"),
           );
           const secondaryFoundationBeams = allBeamsAcrossStories.filter((b) =>
-            b.prop.toUpperCase().startsWith("FSB")
+            b.prop.toUpperCase().startsWith("FSB"),
           );
           const specialBeams = allBeamsAcrossStories
             .filter(
               (b) =>
                 b.prop.toUpperCase().startsWith("WB") ||
-                b.prop.toUpperCase().startsWith("FWB")
+                b.prop.toUpperCase().startsWith("FWB"),
             )
             .map((b) => ({
               ...b,
@@ -2918,7 +3320,7 @@
             for (const story of availableStories) {
               // [修改] 包含所有梁類型（大梁和小梁都可以設定固定編號）
               const allBeamsInStory = allBeamsAcrossStories.filter(
-                (b) => b.story === story
+                (b) => b.story === story,
               );
 
               allBeamsInStory.forEach((beam) => {
@@ -2926,7 +3328,7 @@
                 const matchedRule = fixedLabelRules.find(
                   (rule) =>
                     beamSection.includes(rule.section) ||
-                    beamSection === rule.section
+                    beamSection === rule.section,
                 );
 
                 if (matchedRule) {
@@ -2962,7 +3364,7 @@
 
                     const beamType = isSecondaryBeam ? "小梁" : "大梁";
                     console.log(
-                      `[${story}] ${beam.name} (${beam.prop}) → ${newLabel} [${beamType}]`
+                      `[${story}] ${beam.name} (${beam.prop}) → ${newLabel} [${beamType}]`,
                     );
                   }
                 }
@@ -2973,8 +3375,8 @@
             console.log(`✓ 共處理 ${fixedLabelBeams.length} 根固定編號梁`);
             console.log(
               `✓ 預留序號 (格式: 前綴:序號): ${Array.from(reservedSerials).join(
-                ", "
-              )}`
+                ", ",
+              )}`,
             );
             console.log("==========================================\n");
           }
@@ -2991,7 +3393,7 @@
             ) {
               globalSymmetryAxisX = userSymmetryAxisValue;
               console.log(
-                `\n[對稱軸] 使用自訂值 X = ${globalSymmetryAxisX.toFixed(3)}`
+                `\n[對稱軸] 使用自訂值 X = ${globalSymmetryAxisX.toFixed(3)}`,
               );
             } else if (
               detectedSymmetryAxis?.value !== null &&
@@ -3000,8 +3402,8 @@
               globalSymmetryAxisX = detectedSymmetryAxis.value;
               console.log(
                 `\n[對稱軸] 使用自動偵測值 X = ${globalSymmetryAxisX.toFixed(
-                  3
-                )}`
+                  3,
+                )}`,
               );
             }
           }
@@ -3018,10 +3420,10 @@
             // 對每個樓層使用智能偵測
             for (const story of availableStories) {
               const secondaryBeamsInStory = secondaryBeams.filter(
-                (b) => b.story === story
+                (b) => b.story === story,
               );
               const mainBeamsInStory = mainBeams.filter(
-                (b) => b.story === story
+                (b) => b.story === story,
               );
               const allBeamsInStory = [
                 ...secondaryBeamsInStory,
@@ -3034,7 +3436,7 @@
               const detectedAxis = detectSymmetryAxis(
                 allBeamsInStory,
                 joints,
-                gridData
+                gridData,
               );
 
               if (detectedAxis) {
@@ -3076,7 +3478,7 @@
               console.log(
                 `\n[全域對稱軸] X = ${globalSymmetryAxisX.toFixed(3)} (來自 ${
                   bestGroup.length
-                } 個樓層)`
+                } 個樓層)`,
               );
               bestGroup.forEach((c) => console.log(`  - ${c.story}`));
             } else {
@@ -3088,7 +3490,7 @@
           for (const story of availableStories) {
             const mainBeamsInStory = mainBeams.filter((b) => b.story === story);
             const secondaryBeamsInStory = secondaryBeams.filter(
-              (b) => b.story === story
+              (b) => b.story === story,
             );
             const secondaryFoundationBeamsInStory =
               secondaryFoundationBeams.filter((b) => b.story === story);
@@ -3098,7 +3500,7 @@
               const beamsToNumber = mainBeamsInStory.filter((beam) => {
                 const beamKey = `${beam.name}|${beam.joint1}|${beam.joint2}`;
                 return !fixedLabelBeams.some(
-                  (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey
+                  (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey,
                 );
               });
 
@@ -3106,7 +3508,7 @@
                 beamsToNumber,
                 joints,
                 gridData,
-                reservedSerials // [新增] 傳入預留的序號
+                reservedSerials, // [新增] 傳入預留的序號
               );
 
               // [修复] 处理所有大梁，包括没有被成功编号的梁
@@ -3131,7 +3533,7 @@
                       prefix = propUpper.startsWith("FB") ? "FB" : "B";
                     }
 
-                    const finalPrefix = `${prefix}${components.primaryGridName.original || components.primaryGridName}${components.subGridMarker}`;
+                    const finalPrefix = `${prefix}${components.primaryGridName}${components.subGridMarker}`;
                     newLabel = `${finalPrefix}-${components.serial}`;
                   } else {
                     // 原有的水平/垂直梁編號邏輯
@@ -3141,10 +3543,10 @@
                         ? "FB"
                         : "B"
                       : propUpper.startsWith("FB")
-                      ? "FG"
-                      : "G";
+                        ? "FG"
+                        : "G";
 
-                    const finalPrefix = `${prefix}${components.primaryGridName.original || components.primaryGridName}${components.subGridMarker}`;
+                    const finalPrefix = `${prefix}${components.primaryGridName}${components.subGridMarker}`;
                     newLabel = `${finalPrefix}-${components.serial}`;
                   }
                 }
@@ -3163,9 +3565,9 @@
                 (beam) => {
                   const beamKey = `${beam.name}|${beam.joint1}|${beam.joint2}`;
                   return !fixedLabelBeams.some(
-                    (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey
+                    (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey,
                   );
-                }
+                },
               );
 
               const secondaryBeamLabels = generateSecondaryBeamLabels(
@@ -3175,7 +3577,7 @@
                 "b",
                 globalSymmetryAxisX,
                 reservedSerials, // [新增] 傳入預留的序號
-                gridData // [新增] 傳入格線資料以支援座標系統判斷
+                gridData, // [新增] 傳入格線資料以支援座標系統判斷
               );
 
               // [修复] 处理所有小梁，包括没有被成功编号的梁
@@ -3198,7 +3600,7 @@
                 secondaryFoundationBeamsInStory.filter((beam) => {
                   const beamKey = `${beam.name}|${beam.joint1}|${beam.joint2}`;
                   return !fixedLabelBeams.some(
-                    (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey
+                    (fb) => `${fb.name}|${fb.joint1}|${fb.joint2}` === beamKey,
                   );
                 });
 
@@ -3209,7 +3611,7 @@
                 "fb",
                 globalSymmetryAxisX,
                 reservedSerials, // [新增] 傳入預留的序號
-                gridData // [新增] 傳入格線資料以支援座標系統判斷
+                gridData, // [新增] 傳入格線資料以支援座標系統判斷
               );
 
               // [修复] 处理所有基础小梁，包括没有被成功编号的梁
@@ -3230,7 +3632,7 @@
           let finalProcessedData = applySpecialPrefixRules(allLabeledBeams);
           // [修改] 允許特殊梁（WB/FWB）通過過濾，即使沒有編號
           finalProcessedData = finalProcessedData.filter(
-            (beam) => beam.newLabel || beam.isSpecialBeam
+            (beam) => beam.newLabel || beam.isSpecialBeam,
           );
 
           finalProcessedData.sort((a, b) => {
@@ -3263,7 +3665,7 @@
           // [修改] 顯示狀態訊息到控制列的內嵌區域
           showInlineStatus(
             `✅ 編號完成！共處理 ${fullProcessedBeams.length} 根梁`,
-            "success"
+            "success",
           );
           if (fullProcessedBeams.length > 0) {
             exportBtn.disabled = false;
@@ -3278,7 +3680,7 @@
       function populateStorySelector() {
         const selector = document.getElementById("storySelector");
         const fullscreenSelector = document.getElementById(
-          "fullscreen-story-selector"
+          "fullscreen-story-selector",
         );
 
         // 填充主選擇器
@@ -3332,10 +3734,10 @@
 
         if (selectedStory !== "all") {
           beamsToDisplay = beamsToDisplay.filter(
-            (b) => b.story === selectedStory
+            (b) => b.story === selectedStory,
           );
           backgroundBeams = backgroundBeams.filter(
-            (b) => b.story === selectedStory
+            (b) => b.story === selectedStory,
           );
         }
 
@@ -3347,7 +3749,7 @@
             return !b.isSecondaryBeam;
           });
           backgroundBeams = backgroundBeams.filter(
-            (b) => b.prop && !/SB/.test(b.prop.toUpperCase())
+            (b) => b.prop && !/SB/.test(b.prop.toUpperCase()),
           );
         } else if (selectedBeamType === "secondary") {
           beamsToDisplay = beamsToDisplay.filter((b) => {
@@ -3357,7 +3759,7 @@
             return b.isSecondaryBeam;
           });
           backgroundBeams = backgroundBeams.filter(
-            (b) => b.prop && /SB/.test(b.prop.toUpperCase())
+            (b) => b.prop && /SB/.test(b.prop.toUpperCase()),
           );
         }
 
@@ -3399,7 +3801,7 @@
               b.name === beam.name &&
               b.story === beam.story &&
               b.joint1 === beam.joint1 &&
-              b.joint2 === beam.joint2
+              b.joint2 === beam.joint2,
           );
           return { ...beam, j1: originalBeam?.j1, j2: originalBeam?.j2 };
         });
@@ -3409,7 +3811,7 @@
           backgroundBeams,
           svg,
           gridData,
-          isPreviewMode
+          isPreviewMode,
         );
 
         // [新增] 套用已儲存的 Grid System 顯示狀態
@@ -3475,7 +3877,7 @@
         console.log("=== toggleFullscreen 開始 ===");
         console.log(
           "當前全螢幕狀態:",
-          drawingDiv.classList.contains("fullscreen")
+          drawingDiv.classList.contains("fullscreen"),
         );
 
         if (drawingDiv.classList.contains("fullscreen")) {
@@ -3610,7 +4012,7 @@
 
       function handleFullscreenStoryChange() {
         const fullscreenSelector = document.getElementById(
-          "fullscreen-story-selector"
+          "fullscreen-story-selector",
         );
         const mainSelector = document.getElementById("storySelector");
 
@@ -3707,12 +4109,10 @@
             }
           }
         },
-        true
+        true,
       ); // 使用捕獲階段
 
       // ============================================
-
-
 
       function summarizeProperties(floorProps, storyOrder) {
         if (!floorProps || floorProps.length === 0) return "";
@@ -3745,7 +4145,7 @@
         allBeams,
         svg,
         grids,
-        isPreviewMode = false
+        isPreviewMode = false,
       ) {
         const beamCoords = allBeams
           .flatMap((b) => [b.j1, b.j2])
@@ -3783,7 +4183,7 @@
         let scale =
           Math.min(
             (svgWidth - 2 * padding) / (contentWidth || 1),
-            (svgHeight - 2 * padding) / (contentHeight || 1)
+            (svgHeight - 2 * padding) / (contentHeight || 1),
           ) * 0.9;
         if (!isFinite(scale) || scale === 0) scale = 1;
 
@@ -3821,7 +4221,7 @@
         allDrawableBeams.forEach((beam) => {
           const line = document.createElementNS(
             "http://www.w3.org/2000/svg",
-            "line"
+            "line",
           );
           line.setAttribute("x1", transformX(beam.j1.x));
           line.setAttribute("y1", transformY(beam.j1.y));
@@ -3837,7 +4237,7 @@
             // 預覽模式：大梁用藍色，小梁用橘色
             line.setAttribute(
               "class",
-              isSecondaryBeam ? "secondary-beam-line" : "labeled-beam-line"
+              isSecondaryBeam ? "secondary-beam-line" : "labeled-beam-line",
             );
           } else {
             // 背景梁：統一灰色
@@ -3850,7 +4250,7 @@
           // [重構] 按 COORDSYSTEM 分組繪製 Grid Lines，並應用位置和旋轉變換
           const gridGroup = document.createElementNS(
             "http://www.w3.org/2000/svg",
-            "g"
+            "g",
           );
           gridGroup.setAttribute("class", "grid-lines");
 
@@ -3878,7 +4278,7 @@
 
             const line = document.createElementNS(
               "http://www.w3.org/2000/svg",
-              "line"
+              "line",
             );
 
             // ordinate 是在局部座標系中 X 軸的值
@@ -3907,7 +4307,7 @@
 
             const line = document.createElementNS(
               "http://www.w3.org/2000/svg",
-              "line"
+              "line",
             );
 
             // ordinate 是在局部座標系中 Y 軸的值
@@ -3964,7 +4364,7 @@
           // ... 之後繪製網格氣泡 (grid bubble) 的程式碼維持不變 ...
           const gridLabelsGroup = document.createElementNS(
             "http://www.w3.org/2000/svg",
-            "g"
+            "g",
           );
 
           grids.x.forEach((gridLine) => {
@@ -4004,7 +4404,7 @@
               // [修改] 連接線從 Bubble 到旋轉後的 Grid Line 端點
               const topConnector = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "line"
+                "line",
               );
               topConnector.setAttribute("x1", cx_top);
               topConnector.setAttribute("y1", cy_top);
@@ -4018,7 +4418,7 @@
               // [新增] 創建不可見的擴大點擊區域
               const topHitArea = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               topHitArea.setAttribute("cx", cx_top);
               topHitArea.setAttribute("cy", cy_top);
@@ -4030,7 +4430,7 @@
 
               const topBubble = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               topBubble.setAttribute("cx", cx_top);
               topBubble.setAttribute("cy", cy_top);
@@ -4042,7 +4442,7 @@
 
               const topText = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "text"
+                "text",
               );
               topText.setAttribute("x", cx_top);
               topText.setAttribute("y", cy_top);
@@ -4059,7 +4459,7 @@
               // [修改] 連接線從 Bubble 到旋轉後的 Grid Line 端點
               const bottomConnector = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "line"
+                "line",
               );
               bottomConnector.setAttribute("x1", cx_bottom);
               bottomConnector.setAttribute("y1", cy_bottom);
@@ -4073,14 +4473,14 @@
               // [新增] 創建不可見的擴大點擊區域
               const bottomHitArea = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               bottomHitArea.setAttribute("cx", cx_bottom);
               bottomHitArea.setAttribute("cy", cy_bottom);
               bottomHitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 5); // [修改] 輕微擴大半徑提供更好的點擊體驗
               bottomHitArea.setAttribute(
                 "class",
-                "grid-bubble-hitarea draggable"
+                "grid-bubble-hitarea draggable",
               );
               bottomHitArea.setAttribute("data-coordsystem", coordsystem);
               bottomHitArea.setAttribute("fill", "rgba(255,255,255,0.01)"); // [修改] 使用實際透明色讓 fill 區域接收點擊
@@ -4088,7 +4488,7 @@
 
               const bottomBubble = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               bottomBubble.setAttribute("cx", cx_bottom);
               bottomBubble.setAttribute("cy", cy_bottom);
@@ -4100,7 +4500,7 @@
 
               const bottomText = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "text"
+                "text",
               );
               bottomText.setAttribute("x", cx_bottom);
               bottomText.setAttribute("y", cy_bottom);
@@ -4151,7 +4551,7 @@
               // [修改] 連接線從 Bubble 到旋轉後的 Grid Line 端點
               const leftConnector = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "line"
+                "line",
               );
               leftConnector.setAttribute("x1", cx_left);
               leftConnector.setAttribute("y1", cy_left);
@@ -4165,14 +4565,14 @@
               // [新增] 創建不可見的擴大點擊區域
               const leftHitArea = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               leftHitArea.setAttribute("cx", cx_left);
               leftHitArea.setAttribute("cy", cy_left);
               leftHitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 5); // [修改] 輕微擴大半徑提供更好的點擊體驗
               leftHitArea.setAttribute(
                 "class",
-                "grid-bubble-hitarea draggable"
+                "grid-bubble-hitarea draggable",
               );
               leftHitArea.setAttribute("data-coordsystem", coordsystem);
               leftHitArea.setAttribute("fill", "rgba(255,255,255,0.01)"); // [修改] 使用實際透明色讓 fill 區域接收點擊
@@ -4180,7 +4580,7 @@
 
               const leftBubble = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               leftBubble.setAttribute("cx", cx_left);
               leftBubble.setAttribute("cy", cy_left);
@@ -4192,7 +4592,7 @@
 
               const leftText = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "text"
+                "text",
               );
               leftText.setAttribute("x", cx_left);
               leftText.setAttribute("y", cy_left);
@@ -4209,7 +4609,7 @@
               // [修改] 連接線從 Bubble 到旋轉後的 Grid Line 端點
               const rightConnector = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "line"
+                "line",
               );
               rightConnector.setAttribute("x1", cx_right);
               rightConnector.setAttribute("y1", cy_right);
@@ -4223,14 +4623,14 @@
               // [新增] 創建不可見的擴大點擊區域
               const rightHitArea = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               rightHitArea.setAttribute("cx", cx_right);
               rightHitArea.setAttribute("cy", cy_right);
               rightHitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 5); // [修改] 輕微擴大半徑提供更好的點擊體驗
               rightHitArea.setAttribute(
                 "class",
-                "grid-bubble-hitarea draggable"
+                "grid-bubble-hitarea draggable",
               );
               rightHitArea.setAttribute("data-coordsystem", coordsystem);
               rightHitArea.setAttribute("fill", "rgba(255,255,255,0.01)"); // [修改] 使用實際透明色讓 fill 區域接收點擊
@@ -4238,7 +4638,7 @@
 
               const rightBubble = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "circle"
+                "circle",
               );
               rightBubble.setAttribute("cx", cx_right);
               rightBubble.setAttribute("cy", cy_right);
@@ -4250,7 +4650,7 @@
 
               const rightText = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                "text"
+                "text",
               );
               rightText.setAttribute("x", cx_right);
               rightText.setAttribute("y", cy_right);
@@ -4282,7 +4682,7 @@
 
           const line = document.createElementNS(
             "http://www.w3.org/2000/svg",
-            "line"
+            "line",
           );
           line.setAttribute("x1", transformX(beam.j1.x));
           line.setAttribute("y1", transformY(beam.j1.y));
@@ -4341,7 +4741,7 @@
 
           const text = document.createElementNS(
             "http://www.w3.org/2000/svg",
-            "text"
+            "text",
           );
 
           const textX = (transformX(beam.j1.x) + transformX(beam.j2.x)) / 2;
@@ -4371,7 +4771,7 @@
             text.setAttribute("dominant-baseline", "hanging"); // 旋轉後從梁向外延伸
             text.setAttribute(
               "transform",
-              `rotate(-90, ${rotatedX}, ${textY})`
+              `rotate(-90, ${rotatedX}, ${textY})`,
             );
           } else {
             text.dataset.orientation = "angled";
@@ -4392,7 +4792,7 @@
             text.setAttribute("dominant-baseline", "alphabetic"); // 基線對齊
             text.setAttribute(
               "transform",
-              `rotate(${angle}, ${textX}, ${textY - dynamicOffset})` // 旋轉中心調整
+              `rotate(${angle}, ${textX}, ${textY - dynamicOffset})`, // 旋轉中心調整
             );
           }
 
@@ -4457,7 +4857,7 @@
 
         // 搜索所有梁線（包括 WB/FWB 梁和小梁）
         const beamLines = svgElement.querySelectorAll(
-          ".labeled-beam-line, .secondary-beam-line, .special-beam-line, .wall-beam-line"
+          ".labeled-beam-line, .secondary-beam-line, .special-beam-line, .wall-beam-line",
         );
         let nearestBeam = null;
         let minDistance = maxDistance;
@@ -4474,7 +4874,7 @@
             x1,
             y1,
             x2,
-            y2
+            y2,
           );
 
           if (distance < minDistance) {
@@ -4499,7 +4899,7 @@
             b.name === beam.name &&
             b.story === beam.story &&
             b.joint1 === beam.joint1 &&
-            b.joint2 === beam.joint2
+            b.joint2 === beam.joint2,
         );
 
         // 使用最新的梁數據，如果找不到則使用傳入的 beam
@@ -4631,7 +5031,7 @@
             b.name === currentEditingBeam.name &&
             b.story === currentEditingBeam.story &&
             b.joint1 === currentEditingBeam.joint1 &&
-            b.joint2 === currentEditingBeam.joint2
+            b.joint2 === currentEditingBeam.joint2,
         );
 
         if (beamIndex !== -1) {
@@ -4641,15 +5041,15 @@
           // [新增] 連動標準層更新
           if (shouldLinkStandardFloors) {
             const standardFloorGroup = getStandardFloorGroupForStory(
-              currentEditingBeam.story
+              currentEditingBeam.story,
             );
             if (standardFloorGroup && standardFloorGroup.length > 1) {
               const linkedBeams = findBeamsAtSamePosition(
                 fullProcessedBeams[beamIndex],
-                standardFloorGroup
+                standardFloorGroup,
               );
               console.log(
-                `[連動標準層] 更新 ${linkedBeams.length} 個其他樓層的梁`
+                `[連動標準層] 更新 ${linkedBeams.length} 個其他樓層的梁`,
               );
               linkedBeams.forEach((linkedBeam) => {
                 linkedBeam.newLabel = newLabel;
@@ -4661,7 +5061,7 @@
           updateSequentialBeamLabels(
             oldLabel,
             newLabel,
-            currentEditingBeam.story
+            currentEditingBeam.story,
           );
 
           // 重新繪製
@@ -4671,14 +5071,6 @@
         }
       }
 
-
-
-
-
-
-
-
-
       // 檔案選擇時更新檔名顯示並自動預覽
       document
         .getElementById("e2kFile")
@@ -4687,10 +5079,10 @@
           if (event.target.files.length > 0) {
             fileNameDisplay.textContent = event.target.files[0].name;
             // 自動預覽結構
-            if (typeof previewFile === 'function') {
-                previewFile();
+            if (typeof previewFile === "function") {
+              previewFile();
             } else {
-                console.error("previewFile function not found");
+              console.error("previewFile function not found");
             }
           } else {
             fileNameDisplay.textContent = "尚未選擇檔案";
@@ -4699,19 +5091,19 @@
 
       // [新增] 頁面載入時初始化固定編號規則
       // 確保在 main.js 模組載入後執行
-      document.addEventListener("DOMContentLoaded", function() {
-        if (typeof loadFixedLabelRules === 'function') loadFixedLabelRules();
-        if (typeof updateFixedLabelSummary === 'function') updateFixedLabelSummary();
-        if (typeof updateFixedLabelButtonState === 'function') updateFixedLabelButtonState();
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof loadFixedLabelRules === "function") loadFixedLabelRules();
+        if (typeof updateFixedLabelSummary === "function")
+          updateFixedLabelSummary();
+        if (typeof updateFixedLabelButtonState === "function")
+          updateFixedLabelButtonState();
       });
 
       // ============================================
       // 圈選功能實現 (SVG 內部座標系統)
       // ============================================
 
-
       // ============ 搜尋桿件功能 ============
-
 
       // 在繪圖完成后初始化圈選功能
       // 需要在 displayResults 函數調用後執行
@@ -4746,7 +5138,7 @@
             }
           }
         },
-        true
+        true,
       ); // 使用捕獲階段，確保優先攔截
 
       // [新增] 頁面載入時的初始化檢查

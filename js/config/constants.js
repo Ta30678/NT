@@ -1,6 +1,6 @@
 /**
  * BEAM-NAMINGTOOL - 常數和全域變數定義
- * 
+ *
  * 此模組包含所有全域使用的常數和狀態變數
  * 拆分時保持原有邏輯不變
  */
@@ -49,21 +49,21 @@ export const DIRECTION_TOLERANCE = 0.01;
 export const appState = {
   // svg-pan-zoom 實例
   panZoomInstance: null,
-  
+
   // 預覽模式
   previewFileContent: null,
   previewJoints: null,
   userGridConfig: null,
-  
+
   // 梁編輯
   currentEditingBeam: null,
-  
+
   // 固定編號規則 - 已移至 defineProperties 以橋接 window
   // fixedLabelRules: [],
-  
+
   // 字體大小
   currentFontSize: 14,
-  
+
   // 標準層群組快取
   standardFloorGroupsCache: null,
 };
@@ -73,48 +73,70 @@ export const appState = {
 Object.defineProperties(appState, {
   fullProcessedBeams: {
     get: () => window.fullProcessedBeams || [],
-    set: (v) => { window.fullProcessedBeams = v; }
+    set: (v) => {
+      window.fullProcessedBeams = v;
+    },
   },
   fullDrawableBeams: {
     get: () => window.fullDrawableBeams || [],
-    set: (v) => { window.fullDrawableBeams = v; }
+    set: (v) => {
+      window.fullDrawableBeams = v;
+    },
   },
   availableStories: {
     get: () => window.availableStories || [],
-    set: (v) => { window.availableStories = v; }
+    set: (v) => {
+      window.availableStories = v;
+    },
   },
   gridData: {
     get: () => window.gridData || {},
-    set: (v) => { window.gridData = v; }
+    set: (v) => {
+      window.gridData = v;
+    },
   },
   storyOrderInfo: {
     get: () => window.storyOrderInfo || {},
-    set: (v) => { window.storyOrderInfo = v; }
+    set: (v) => {
+      window.storyOrderInfo = v;
+    },
   },
   selectedBeams: {
     get: () => window.selectedBeams || new Set(),
-    set: (v) => { window.selectedBeams = v; }
+    set: (v) => {
+      window.selectedBeams = v;
+    },
   },
   svgElement: {
     get: () => window.svgElement || null,
-    set: (v) => { window.svgElement = v; }
+    set: (v) => {
+      window.svgElement = v;
+    },
   },
   isSelecting: {
     get: () => window.isSelecting || false,
-    set: (v) => { window.isSelecting = v; }
+    set: (v) => {
+      window.isSelecting = v;
+    },
   },
   selectionStart: {
     get: () => window.selectionStart || null,
-    set: (v) => { window.selectionStart = v; }
+    set: (v) => {
+      window.selectionStart = v;
+    },
   },
   selectionRect: {
     get: () => window.selectionRect || null,
-    set: (v) => { window.selectionRect = v; }
+    set: (v) => {
+      window.selectionRect = v;
+    },
   },
   fixedLabelRules: {
     get: () => window.fixedLabelRules || [],
-    set: (v) => { window.fixedLabelRules = v; }
-  }
+    set: (v) => {
+      window.fixedLabelRules = v;
+    },
+  },
 });
 
 // ============================================
@@ -126,53 +148,131 @@ export const mirrorState = {};
 
 Object.defineProperties(mirrorState, {
   SYMMETRY_PASS_SCORE: {
-    get: () => (typeof window.SYMMETRY_PASS_SCORE !== 'undefined' ? window.SYMMETRY_PASS_SCORE : 0.7),
-    set: (v) => { window.SYMMETRY_PASS_SCORE = v; }
+    get: () =>
+      typeof window.SYMMETRY_PASS_SCORE !== "undefined"
+        ? window.SYMMETRY_PASS_SCORE
+        : 0.7,
+    set: (v) => {
+      window.SYMMETRY_PASS_SCORE = v;
+    },
   },
   SYMMETRY_TOLERANCE: {
-    get: () => (typeof window.SYMMETRY_TOLERANCE !== 'undefined' ? window.SYMMETRY_TOLERANCE : 0.5),
-    set: (v) => { window.SYMMETRY_TOLERANCE = v; }
+    get: () =>
+      typeof window.SYMMETRY_TOLERANCE !== "undefined"
+        ? window.SYMMETRY_TOLERANCE
+        : 0.5,
+    set: (v) => {
+      window.SYMMETRY_TOLERANCE = v;
+    },
   },
   MATCHING_TOLERANCE: {
-    get: () => (typeof window.MATCHING_TOLERANCE !== 'undefined' ? window.MATCHING_TOLERANCE : 0.8),
-    set: (v) => { window.MATCHING_TOLERANCE = v; }
+    get: () =>
+      typeof window.MATCHING_TOLERANCE !== "undefined"
+        ? window.MATCHING_TOLERANCE
+        : 0.8,
+    set: (v) => {
+      window.MATCHING_TOLERANCE = v;
+    },
   },
   symmetryAxisDirection: {
-    get: () => (typeof window.symmetryAxisDirection !== 'undefined' ? window.symmetryAxisDirection : "vertical"),
-    set: (v) => { window.symmetryAxisDirection = v; }
+    get: () =>
+      typeof window.symmetryAxisDirection !== "undefined"
+        ? window.symmetryAxisDirection
+        : "vertical",
+    set: (v) => {
+      window.symmetryAxisDirection = v;
+    },
   },
   userSymmetryAxisValue: {
     get: () => window.userSymmetryAxisValue || null,
-    set: (v) => { window.userSymmetryAxisValue = v; }
+    set: (v) => {
+      window.userSymmetryAxisValue = v;
+    },
   },
   detectedSymmetryAxis: {
     get: () => window.detectedSymmetryAxis || null,
-    set: (v) => { window.detectedSymmetryAxis = v; }
+    set: (v) => {
+      window.detectedSymmetryAxis = v;
+    },
   },
   showSymmetryAxisLine: {
-    get: () => (typeof window.showSymmetryAxisLine !== 'undefined' ? window.showSymmetryAxisLine : true),
-    set: (v) => { window.showSymmetryAxisLine = v; }
+    get: () =>
+      typeof window.showSymmetryAxisLine !== "undefined"
+        ? window.showSymmetryAxisLine
+        : true,
+    set: (v) => {
+      window.showSymmetryAxisLine = v;
+    },
   },
   axisInputMethod: {
     get: () => window.axisInputMethod || "grid",
-    set: (v) => { window.axisInputMethod = v; }
+    set: (v) => {
+      window.axisInputMethod = v;
+    },
   },
   isAxisClickModeActive: {
     get: () => window.isAxisClickModeActive || false,
-    set: (v) => { window.isAxisClickModeActive = v; }
+    set: (v) => {
+      window.isAxisClickModeActive = v;
+    },
   },
   axisPoint1: {
     get: () => window.axisPoint1 || null,
-    set: (v) => { window.axisPoint1 = v; }
+    set: (v) => {
+      window.axisPoint1 = v;
+    },
   },
   axisPoint2: {
     get: () => window.axisPoint2 || null,
-    set: (v) => { window.axisPoint2 = v; }
+    set: (v) => {
+      window.axisPoint2 = v;
+    },
   },
   axisPinClickCount: {
     get: () => window.axisPinClickCount || 0,
-    set: (v) => { window.axisPinClickCount = v; }
-  }
+    set: (v) => {
+      window.axisPinClickCount = v;
+    },
+  },
+});
+
+// ============================================
+// 小梁編號起始設定
+// ============================================
+
+export const secondaryBeamConfig = {};
+
+Object.defineProperties(secondaryBeamConfig, {
+  // 是否啟用客製化起始編號
+  useCustomStart: {
+    get: () =>
+      typeof window.secondaryBeamUseCustomStart !== "undefined"
+        ? window.secondaryBeamUseCustomStart
+        : false,
+    set: (v) => {
+      window.secondaryBeamUseCustomStart = v;
+    },
+  },
+  // 水平小梁起始編號（預設 1，即 b1）
+  horizontalStart: {
+    get: () =>
+      typeof window.secondaryBeamHorizontalStart !== "undefined"
+        ? window.secondaryBeamHorizontalStart
+        : 1,
+    set: (v) => {
+      window.secondaryBeamHorizontalStart = v;
+    },
+  },
+  // 垂直小梁起始編號（預設 null，表示使用無條件進位規則）
+  verticalStart: {
+    get: () =>
+      typeof window.secondaryBeamVerticalStart !== "undefined"
+        ? window.secondaryBeamVerticalStart
+        : null,
+    set: (v) => {
+      window.secondaryBeamVerticalStart = v;
+    },
+  },
 });
 
 // ============================================

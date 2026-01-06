@@ -62,7 +62,8 @@ body {
   padding: 20px;
   border-radius: 18px;
   border: 1px solid var(--theme-border);
-  box-shadow: 0 10px 25px -5px var(--theme-shadow),
+  box-shadow:
+    0 10px 25px -5px var(--theme-shadow),
     0 8px 10px -6px var(--theme-shadow);
   animation: fadeIn 0.8s ease-out forwards;
   position: relative;

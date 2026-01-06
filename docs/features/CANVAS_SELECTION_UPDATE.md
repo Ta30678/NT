@@ -3,6 +3,7 @@
 ## 問題分析
 
 原有的圈選功能直接在 SVG 內部操作，遇到以下問題：
+
 1. SVG 使用了 svg-pan-zoom 插件，座標系統有複雜的變換
 2. 座標轉換不精確，導致選擇框的顯示位置和判定範圍不一致
 3. 框內的梁有時選不到，甚至選到框外的物件
@@ -50,13 +51,18 @@
 ### HTML 結構變更
 
 **之前：**
+
 ```html
 <svg id="drawing-svg"></svg>
 ```
 
 **現在：**
+
 ```html
-<div id="drawing-container" style="position: relative; width: 100%; height: 60vh;">
+<div
+  id="drawing-container"
+  style="position: relative; width: 100%; height: 60vh;"
+>
   <svg id="drawing-svg" style="position: absolute; ..."></svg>
   <canvas id="selection-canvas" style="position: absolute; ..."></canvas>
 </div>
@@ -65,17 +71,19 @@
 ### 座標轉換策略
 
 1. **圈選時**：使用 Canvas 的屏幕座標
+
    ```javascript
    function getCanvasPoint(evt) {
      const rect = selectionCanvas.getBoundingClientRect();
      return {
        x: evt.clientX - rect.left,
-       y: evt.clientY - rect.top
+       y: evt.clientY - rect.top,
      };
    }
    ```
 
 2. **判定時**：將 SVG 梁的座標轉換到屏幕座標
+
    ```javascript
    function getBeamScreenBounds(line) {
      // 從 SVG 座標轉換到屏幕座標
@@ -92,17 +100,18 @@
 ### 繪製選擇框
 
 使用 Canvas API 繪製：
+
 ```javascript
 // 清空 canvas
 selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
 
 // 設置樣式
 if (isCrossingMode) {
-  selectionCtx.strokeStyle = '#22c55e'; // 綠色
-  selectionCtx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+  selectionCtx.strokeStyle = "#22c55e"; // 綠色
+  selectionCtx.fillStyle = "rgba(34, 197, 94, 0.1)";
 } else {
-  selectionCtx.strokeStyle = '#3b82f6'; // 藍色
-  selectionCtx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+  selectionCtx.strokeStyle = "#3b82f6"; // 藍色
+  selectionCtx.fillStyle = "rgba(59, 130, 246, 0.1)";
 }
 
 // 繪製矩形
@@ -116,10 +125,10 @@ Canvas 默認 `pointer-events: none`，只在圈選時啟用：
 
 ```javascript
 // 開始圈選時
-selectionCanvas.classList.add('selecting'); // 啟用 pointer events
+selectionCanvas.classList.add("selecting"); // 啟用 pointer events
 
 // 結束圈選時
-selectionCanvas.classList.remove('selecting'); // 禁用 pointer events
+selectionCanvas.classList.remove("selecting"); // 禁用 pointer events
 ```
 
 ## 使用方法（與之前相同）
@@ -151,18 +160,22 @@ selectionCanvas.classList.remove('selecting'); // 禁用 pointer events
 ## 技術優勢
 
 ### 1. 座標一致性
+
 - **問題**：SVG 座標 vs 屏幕座標不一致
 - **解決**：全部使用屏幕座標比較
 
 ### 2. 視覺準確性
+
 - **問題**：看到的框和實際判定範圍不同
 - **解決**：Canvas 繪製的框就是判定範圍
 
 ### 3. 性能優化
+
 - **問題**：頻繁操作 SVG DOM 元素
 - **解決**：Canvas 只需 clearRect + fillRect
 
 ### 4. 維護性
+
 - **問題**：座標轉換邏輯複雜
 - **解決**：邏輯分離，只在必要時轉換
 

@@ -9,18 +9,20 @@
 ### 1. SVG 座標轉換修復
 
 **修改前：**
+
 ```javascript
 function getSVGPoint(evt) {
   const svg = document.getElementById("drawing-svg");
   const CTM = svg.getScreenCTM();
   return {
     x: (evt.clientX - CTM.e) / CTM.a,
-    y: (evt.clientY - CTM.f) / CTM.d
+    y: (evt.clientY - CTM.f) / CTM.d,
   };
 }
 ```
 
 **修改後：**
+
 ```javascript
 function getSVGPoint(evt) {
   const svg = document.getElementById("drawing-svg");
@@ -32,7 +34,7 @@ function getSVGPoint(evt) {
   const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
   return {
     x: svgP.x,
-    y: svgP.y
+    y: svgP.y,
   };
 }
 ```
@@ -73,6 +75,7 @@ function getSVGPoint(evt) {
 ### 步驟 3: 分析控制台輸出
 
 **預期看到的輸出範例：**
+
 ```
 === 選擇框座標 ===
 矩形框屬性: {x: "150.5", y: "200.3", width: "300.2", height: "150.7"}
@@ -90,14 +93,17 @@ function getSVGPoint(evt) {
 ### 步驟 4: 檢查問題
 
 **如果選擇框座標和判定範圍不一致：**
+
 - 這表示座標轉換有問題
 - 檢查 `getSVGPoint()` 函數
 
 **如果梁的座標在範圍內但未被選中：**
+
 - 檢查選擇邏輯 (Window vs Crossing 模式)
 - 查看 `selectBeamsInRect()` 函數
 
 **如果範圍外的梁被選中：**
+
 - 可能是 Crossing 模式的線段相交算法問題
 - 查看 `lineIntersectsRect()` 函數
 
@@ -106,11 +112,13 @@ function getSVGPoint(evt) {
 我們創建了一個獨立的測試頁面：[selection_debug.html](selection_debug.html)
 
 **優點：**
+
 - 簡化的環境，沒有複雜的 ETABS 數據
 - 內建的視覺化日誌
 - 固定的測試用梁，容易驗證
 
 **使用方法：**
+
 1. 在瀏覽器中打開 `selection_debug.html`
 2. 按住 Ctrl 並拖曳來測試圈選
 3. 查看頁面底部的實時日誌
@@ -123,10 +131,12 @@ function getSVGPoint(evt) {
 **症狀：** 拖曳時看到的藍/綠色框和最終的判定範圍不一致
 
 **可能原因：**
+
 - SVG 座標轉換不正確
 - svg-pan-zoom 的變換矩陣沒有正確應用
 
 **解決方案：**
+
 - 確認使用 `createSVGPoint()` 和 `matrixTransform()`
 - 檢查 `getScreenCTM().inverse()` 是否正確調用
 
@@ -135,17 +145,24 @@ function getSVGPoint(evt) {
 **症狀：** 左→右拖曳（藍色框）時，明顯在框內的梁沒被選中
 
 **可能原因：**
+
 - 判定條件太嚴格
 - 浮點數精度問題
 
 **解決方案：**
+
 ```javascript
 // 添加小的容差值
 const TOLERANCE = 1; // 1個像素的容差
-isInside = (x1 >= minX - TOLERANCE && x1 <= maxX + TOLERANCE &&
-           y1 >= minY - TOLERANCE && y1 <= maxY + TOLERANCE &&
-           x2 >= minX - TOLERANCE && x2 <= maxX + TOLERANCE &&
-           y2 >= minY - TOLERANCE && y2 <= maxY + TOLERANCE);
+isInside =
+  x1 >= minX - TOLERANCE &&
+  x1 <= maxX + TOLERANCE &&
+  y1 >= minY - TOLERANCE &&
+  y1 <= maxY + TOLERANCE &&
+  x2 >= minX - TOLERANCE &&
+  x2 <= maxX + TOLERANCE &&
+  y2 >= minY - TOLERANCE &&
+  y2 <= maxY + TOLERANCE;
 ```
 
 ### 問題 3: Crossing 模式選到不該選的梁
@@ -153,10 +170,12 @@ isInside = (x1 >= minX - TOLERANCE && x1 <= maxX + TOLERANCE &&
 **症狀：** 右→左拖曳（綠色框）時，沒碰到框的梁也被選中
 
 **可能原因：**
+
 - 線段相交算法實現錯誤
 - 邊界條件處理不當
 
 **解決方案：**
+
 - 檢查 `lineIntersectsLine()` 的數學邏輯
 - 確認端點檢查是否正確
 

@@ -8,7 +8,7 @@
  */
 export function setupSelectWheelListeners() {
   const selectors = document.querySelectorAll(
-    "#storySelector, #beamTypeSelector"
+    "#storySelector, #beamTypeSelector",
   );
 
   selectors.forEach((select) => {
@@ -51,4 +51,3 @@ export function setupKeyboardListeners() {
     });
   }
 }
-

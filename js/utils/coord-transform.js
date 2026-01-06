@@ -1,7 +1,7 @@
 /**
  * BEAM-NAMINGTOOL - 座標轉換工具
  * 包含：SVG 座標轉換、全域/區域座標轉換
- * 
+ *
  * 注意：這些函數依賴 svgElement 全域變數，在使用時需確保已初始化
  */
 
@@ -112,9 +112,11 @@ export function svgToEtabsCoord(svgX, svgY, cachedJoints) {
   // 需要根據繪圖時的座標轉換來反推
 
   // 從 cachedJoints 計算座標範圍
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-  
+  let minX = Infinity,
+    maxX = -Infinity;
+  let minY = Infinity,
+    maxY = -Infinity;
+
   for (const joint of Object.values(cachedJoints || {})) {
     if (joint.x < minX) minX = joint.x;
     if (joint.x > maxX) maxX = joint.x;

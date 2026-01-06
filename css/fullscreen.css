@@ -59,7 +59,14 @@
 }
 
 /* --- 全螢幕模式 - 隱藏其他容器內容 --- */
-body:has(#drawing.fullscreen) > *:not(#drawing):not(script):not(style):not(link):not(#batch-edit-dialog):not(#batch-edit-overlay):not(#search-member-dialog):not(#search-member-overlay):not(#fixed-label-dialog):not(#fixed-label-overlay):not(#beam-edit-dialog):not(#fullscreen-floor-bubble) {
+body:has(#drawing.fullscreen)
+  > *:not(#drawing):not(script):not(style):not(link):not(
+    #batch-edit-dialog
+  ):not(#batch-edit-overlay):not(#search-member-dialog):not(
+    #search-member-overlay
+  ):not(#fixed-label-dialog):not(#fixed-label-overlay):not(
+    #beam-edit-dialog
+  ):not(#fullscreen-floor-bubble) {
   visibility: hidden !important;
 }
 

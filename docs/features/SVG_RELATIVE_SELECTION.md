@@ -5,6 +5,7 @@
 您的觀察完全正確！之前的方案有根本性問題：
 
 ❌ **屏幕絕對座標方案的問題**：
+
 - 用戶會縮放和平移 SVG
 - 使用屏幕座標會導致：框選的位置和判定範圍隨著縮放而錯位
 - 不符合用戶直覺：看到的框 ≠ 實際判定範圍
@@ -59,12 +60,13 @@ function getSVGCoords(evt) {
   const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
   return {
     x: svgPt.x,
-    y: svgPt.y
+    y: svgPt.y,
   };
 }
 ```
 
 **解釋**：
+
 - `getScreenCTM()` 獲取 SVG 當前的變換矩陣（包含縮放、平移）
 - `.inverse()` 計算逆矩陣
 - `matrixTransform()` 將屏幕座標轉換到 SVG 內部座標
@@ -98,10 +100,10 @@ selectionRect.setAttribute("height", Math.abs(height));
 
 ```javascript
 // 梁的座標直接從 SVG 屬性讀取
-const x1 = parseFloat(line.getAttribute('x1'));
-const y1 = parseFloat(line.getAttribute('y1'));
-const x2 = parseFloat(line.getAttribute('x2'));
-const y2 = parseFloat(line.getAttribute('y2'));
+const x1 = parseFloat(line.getAttribute("x1"));
+const y1 = parseFloat(line.getAttribute("y1"));
+const x2 = parseFloat(line.getAttribute("x2"));
+const y2 = parseFloat(line.getAttribute("y2"));
 
 // 選擇框的範圍（SVG 座標）
 const minX = Math.min(selectionStart.x, endPoint.x);
@@ -110,8 +112,15 @@ const minY = Math.min(selectionStart.y, endPoint.y);
 const maxY = Math.max(selectionStart.y, endPoint.y);
 
 // Window 模式：完全包含
-isInside = (x1 >= minX && x1 <= maxX && y1 >= minY && y1 <= maxY &&
-           x2 >= minX && x2 <= maxX && y2 >= minY && y2 <= maxY);
+isInside =
+  x1 >= minX &&
+  x1 <= maxX &&
+  y1 >= minY &&
+  y1 <= maxY &&
+  x2 >= minX &&
+  x2 <= maxX &&
+  y2 >= minY &&
+  y2 <= maxY;
 
 // Crossing 模式：線段相交
 isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX, maxY);
@@ -120,30 +129,34 @@ isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX, maxY);
 ## 優勢分析
 
 ### 1. ✅ 相對性
+
 - **無論怎麼縮放平移，判定邏輯都正確**
 - 選擇框和梁在同一座標系統中
 
 ### 2. ✅ 直覺性
+
 - 用戶看到的藍/綠色框 = 實際判定範圍
 - 縮放時框和梁一起縮放
 
 ### 3. ✅ 簡潔性
+
 - 不需要複雜的座標轉換
 - 直接讀取 SVG 屬性即可
 
 ### 4. ✅ 性能
+
 - 只在鼠標移動時轉換座標
 - 判定時直接比較數值
 
 ## 與之前方案的對比
 
-| 特性 | 屏幕座標方案 ❌ | SVG 座標方案 ✅ |
-|------|----------------|-----------------|
-| 縮放適應 | 錯位 | 完美適應 |
-| 平移適應 | 錯位 | 完美適應 |
-| 視覺一致性 | 不一致 | 100% 一致 |
-| 代碼複雜度 | 高 | 低 |
-| 用戶體驗 | 不直覺 | 符合直覺 |
+| 特性       | 屏幕座標方案 ❌ | SVG 座標方案 ✅ |
+| ---------- | --------------- | --------------- |
+| 縮放適應   | 錯位            | 完美適應        |
+| 平移適應   | 錯位            | 完美適應        |
+| 視覺一致性 | 不一致          | 100% 一致       |
+| 代碼複雜度 | 高              | 低              |
+| 用戶體驗   | 不直覺          | 符合直覺        |
 
 ## 使用示例
 
@@ -176,10 +189,14 @@ isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX, maxY);
 ## 調試輸出
 
 ```javascript
-console.log('=== 選擇框範圍 (SVG 內部座標) ===');
-console.log(`範圍: (${minX.toFixed(1)}, ${minY.toFixed(1)}) 到 (${maxX.toFixed(1)}, ${maxY.toFixed(1)})`);
-console.log(`模式: ${isCrossingMode ? 'Crossing (右→左)' : 'Window (左→右)'}`);
-console.log(`梁 ${beamName}: (${x1.toFixed(1)},${y1.toFixed(1)})→(${x2.toFixed(1)},${y2.toFixed(1)}) ${isInside ? '✓選中' : '✗未選中'}`);
+console.log("=== 選擇框範圍 (SVG 內部座標) ===");
+console.log(
+  `範圍: (${minX.toFixed(1)}, ${minY.toFixed(1)}) 到 (${maxX.toFixed(1)}, ${maxY.toFixed(1)})`,
+);
+console.log(`模式: ${isCrossingMode ? "Crossing (右→左)" : "Window (左→右)"}`);
+console.log(
+  `梁 ${beamName}: (${x1.toFixed(1)},${y1.toFixed(1)})→(${x2.toFixed(1)},${y2.toFixed(1)}) ${isInside ? "✓選中" : "✗未選中"}`,
+);
 ```
 
 **重點**：這些座標都是 SVG 內部座標，不受視圖縮放影響！
@@ -211,6 +228,7 @@ console.log(`梁 ${beamName}: (${x1.toFixed(1)},${y1.toFixed(1)})→(${x2.toFixe
 ## 預期結果
 
 ✅ **所有場景下：**
+
 - 選擇框顯示位置正確
 - 判定範圍與顯示一致
 - 框內的梁被選中
@@ -237,6 +255,7 @@ console.log(`梁 ${beamName}: (${x1.toFixed(1)},${y1.toFixed(1)})→(${x2.toFixe
 請測試這個版本，應該會完全解決座標不一致的問題！
 
 如果還有任何問題，請提供：
+
 1. 控制台輸出
 2. 縮放比例
 3. 具體的選擇情況

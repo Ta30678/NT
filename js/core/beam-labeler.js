@@ -1,6 +1,6 @@
 /**
  * BEAM-NAMINGTOOL - 梁編號核心邏輯模組
- * 
+ *
  * 此檔案負責：
  * 1. 大梁編號生成 (generateLabelsForStory)
  * 2. 小梁編號生成 (generateSecondaryBeamLabels)
@@ -9,11 +9,20 @@
  * 5. 標準層群組管理
  */
 
-import { distance, isPointOnSegment, calculateBeamAngle } from '../utils/geometry.js';
-import { globalToLocal } from '../utils/coord-transform.js';
-import { findClosestGrid, parseGridName } from './parser.js';
-import { mirrorPoint, isBeamOnSymmetryAxis } from '../features/mirror-mode.js';
-import { TOLERANCE, DIRECTION_TOLERANCE, mirrorState } from '../config/constants.js';
+import {
+  distance,
+  isPointOnSegment,
+  calculateBeamAngle,
+} from "../utils/geometry.js";
+import { globalToLocal } from "../utils/coord-transform.js";
+import { findClosestGrid, parseGridName } from "./parser.js";
+import { mirrorPoint, isBeamOnSymmetryAxis } from "../features/mirror-mode.js";
+import {
+  TOLERANCE,
+  DIRECTION_TOLERANCE,
+  mirrorState,
+  secondaryBeamConfig,
+} from "../config/constants.js";
 
 // ============================================
 // 座標系統輔助函數
@@ -25,7 +34,7 @@ import { TOLERANCE, DIRECTION_TOLERANCE, mirrorState } from '../config/constants
  */
 export function findBestCoordSystemForBeam(beam, grids) {
   if (!grids.coordSystems || Object.keys(grids.coordSystems).length === 0) {
-    return 'GLOBAL';
+    return "GLOBAL";
   }
 
   const POSITION_TOLERANCE = 0.01; // 位置容差（米）
@@ -47,13 +56,17 @@ export function findBestCoordSystemForBeam(beam, grids) {
 
       // 檢查該端點是否對齊該座標系統的 X 軸格線（垂直線）
       const alignedWithGridX = grids.x
-        .filter((g) => (g.coordsystem || 'GLOBAL') === csName)
-        .some((g) => Math.abs(localCoord.localX - g.ordinate) < POSITION_TOLERANCE);
+        .filter((g) => (g.coordsystem || "GLOBAL") === csName)
+        .some(
+          (g) => Math.abs(localCoord.localX - g.ordinate) < POSITION_TOLERANCE,
+        );
 
       // 檢查該端點是否對齊該座標系統的 Y 軸格線（水平線）
       const alignedWithGridY = grids.y
-        .filter((g) => (g.coordsystem || 'GLOBAL') === csName)
-        .some((g) => Math.abs(localCoord.localY - g.ordinate) < POSITION_TOLERANCE);
+        .filter((g) => (g.coordsystem || "GLOBAL") === csName)
+        .some(
+          (g) => Math.abs(localCoord.localY - g.ordinate) < POSITION_TOLERANCE,
+        );
 
       // 如果端點在此座標系統的格線上，增加該系統的分數
       if (alignedWithGridX) coordSystemScores[csName]++;
@@ -62,12 +75,15 @@ export function findBestCoordSystemForBeam(beam, grids) {
   });
 
   // 返回分數最高的座標系統（優先選擇非 GLOBAL）
-  let bestCoordSystem = 'GLOBAL';
+  let bestCoordSystem = "GLOBAL";
   let maxScore = 0;
 
   for (const [csName, score] of Object.entries(coordSystemScores)) {
     // 分數更高，或分數相同但非 GLOBAL（優先非 GLOBAL）
-    if (score > maxScore || (score === maxScore && score > 0 && csName !== 'GLOBAL')) {
+    if (
+      score > maxScore ||
+      (score === maxScore && score > 0 && csName !== "GLOBAL")
+    ) {
       maxScore = score;
       bestCoordSystem = csName;
     }
@@ -75,7 +91,7 @@ export function findBestCoordSystemForBeam(beam, grids) {
 
   // 如果沒有找到匹配的座標系統，回退到 GLOBAL
   if (maxScore === 0) {
-    bestCoordSystem = 'GLOBAL';
+    bestCoordSystem = "GLOBAL";
   }
 
   return bestCoordSystem;
@@ -86,8 +102,8 @@ export function findBestCoordSystemForBeam(beam, grids) {
  */
 export function getGridsForCoordSystem(grids, coordsystem) {
   return {
-    x: grids.x.filter((g) => (g.coordsystem || 'GLOBAL') === coordsystem),
-    y: grids.y.filter((g) => (g.coordsystem || 'GLOBAL') === coordsystem),
+    x: grids.x.filter((g) => (g.coordsystem || "GLOBAL") === coordsystem),
+    y: grids.y.filter((g) => (g.coordsystem || "GLOBAL") === coordsystem),
   };
 }
 
@@ -95,8 +111,10 @@ export function getGridsForCoordSystem(grids, coordsystem) {
  * 取得梁中心點在特定座標系統中的局部座標
  */
 export function getBeamLocalCenter(beam, coordSystemName, grids) {
-  const csInfo = grids.coordSystems ? grids.coordSystems[coordSystemName] : null;
-  if (!csInfo || coordSystemName === 'GLOBAL') {
+  const csInfo = grids.coordSystems
+    ? grids.coordSystems[coordSystemName]
+    : null;
+  if (!csInfo || coordSystemName === "GLOBAL") {
     // GLOBAL 系統不需轉換
     return { localX: beam.centerX, localY: beam.centerY };
   }
@@ -107,8 +125,10 @@ export function getBeamLocalCenter(beam, coordSystemName, grids) {
  * 取得梁端點在特定座標系統中的局部座標
  */
 export function getBeamLocalBounds(beam, coordSystemName, grids) {
-  const csInfo = grids.coordSystems ? grids.coordSystems[coordSystemName] : null;
-  if (!csInfo || coordSystemName === 'GLOBAL') {
+  const csInfo = grids.coordSystems
+    ? grids.coordSystems[coordSystemName]
+    : null;
+  if (!csInfo || coordSystemName === "GLOBAL") {
     // GLOBAL 系統不需轉換
     return {
       minX: beam.minX,
@@ -136,7 +156,7 @@ export function getBeamOrientationInCoordSystem(beam, coordSystemName, grids) {
 
   // 獲取座標系統的旋轉角度
   let csAngle = 0;
-  if (coordSystemName !== 'GLOBAL' && grids.coordSystems[coordSystemName]) {
+  if (coordSystemName !== "GLOBAL" && grids.coordSystems[coordSystemName]) {
     csAngle = grids.coordSystems[coordSystemName].angle || 0;
   }
 
@@ -145,13 +165,13 @@ export function getBeamOrientationInCoordSystem(beam, coordSystemName, grids) {
     Math.abs(beamAngle - csAngle),
     Math.abs(beamAngle - (csAngle + 360)),
     360 - Math.abs(beamAngle - csAngle),
-    Math.abs(beamAngle - (csAngle + 180)) // 考慮反向
+    Math.abs(beamAngle - (csAngle + 180)), // 考慮反向
   );
 
   const angleFromYAxis = Math.min(
     Math.abs(beamAngle - (csAngle + 90)),
     Math.abs(beamAngle - (csAngle + 270)),
-    360 - Math.abs(beamAngle - (csAngle + 90))
+    360 - Math.abs(beamAngle - (csAngle + 90)),
   );
 
   // 判斷是水平、垂直還是斜向
@@ -186,7 +206,12 @@ export function getBeamOrientationInCoordSystem(beam, coordSystemName, grids) {
 /**
  * 為單個樓層的大梁生成編號
  */
-export function generateLabelsForStory(beamsInStory, joints, grids, reservedSerials = new Set()) {
+export function generateLabelsForStory(
+  beamsInStory,
+  joints,
+  grids,
+  reservedSerials = new Set(),
+) {
   const labelComponentMap = new Map();
 
   // 獲取用戶格線配置（從 window 獲取）
@@ -195,12 +220,24 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
   /**
    * 計算梁的序號
    */
-  function getBeamSerial(segment, gridsSubset, isHorizontal, coordSystemName = 'GLOBAL', fullGrids = null) {
+  function getBeamSerial(
+    segment,
+    gridsSubset,
+    isHorizontal,
+    coordSystemName = "GLOBAL",
+    fullGrids = null,
+  ) {
     const ON_GRID_TOLERANCE = 0.1;
 
     // 將梁的座標轉換到局部座標系統
     let localBounds;
-    if (coordSystemName && coordSystemName !== 'GLOBAL' && fullGrids && segment.j1 && segment.j2) {
+    if (
+      coordSystemName &&
+      coordSystemName !== "GLOBAL" &&
+      fullGrids &&
+      segment.j1 &&
+      segment.j2
+    ) {
       localBounds = getBeamLocalBounds(segment, coordSystemName, fullGrids);
     } else {
       localBounds = {
@@ -219,8 +256,10 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
 
       // 優先使用使用者自訂配置
       if (userGridConfig) {
-        const axisKey = gridArray === gridsSubset.x ? 'x' : 'y';
-        const userConfig = userGridConfig[axisKey]?.find((c) => c.name === gridNameToFind);
+        const axisKey = gridArray === gridsSubset.x ? "x" : "y";
+        const userConfig = userGridConfig[axisKey]?.find(
+          (c) => c.name === gridNameToFind,
+        );
         if (userConfig && userConfig.serialValue !== undefined) {
           // 如果 serialValue 是 null，表示要跳過這個格線
           if (userConfig.serialValue === null) {
@@ -231,7 +270,7 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
       }
 
       // 如果是 Secondary 格線，直接返回格線名稱
-      if (gridObj.lineType && gridObj.lineType.toUpperCase() === 'SECONDARY') {
+      if (gridObj.lineType && gridObj.lineType.toUpperCase() === "SECONDARY") {
         return gridNameToFind;
       }
 
@@ -251,7 +290,7 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
 
       if (Math.abs(localBounds.maxX - endGrid.ordinate) < ON_GRID_TOLERANCE) {
         const serial = getSerialValue(endGrid.name, gridsSubset.x);
-        return typeof serial === 'number' ? serial - 1 : serial;
+        return typeof serial === "number" ? serial - 1 : serial;
       }
       const startGrid = findClosestGrid(localBounds.minX, gridsSubset.x);
       if (!startGrid) return NaN;
@@ -262,7 +301,7 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
 
       if (Math.abs(localBounds.maxY - endGrid.ordinate) < ON_GRID_TOLERANCE) {
         const serial = getSerialValue(endGrid.name, gridsSubset.y);
-        return typeof serial === 'number' ? serial - 1 : serial;
+        return typeof serial === "number" ? serial - 1 : serial;
       }
       const startGrid = findClosestGrid(localBounds.minY, gridsSubset.y);
       if (!startGrid) return NaN;
@@ -286,7 +325,11 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
       };
 
       const bestCoordSystem = findBestCoordSystemForBeam(beamData, grids);
-      const orientation = getBeamOrientationInCoordSystem(beamData, bestCoordSystem, grids);
+      const orientation = getBeamOrientationInCoordSystem(
+        beamData,
+        bestCoordSystem,
+        grids,
+      );
 
       return {
         ...b,
@@ -307,7 +350,7 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
     .filter(Boolean);
 
   const processedBeams = new Set();
-  
+
   beamsWithCoords.forEach((beam) => {
     const beamKey = `${beam.name}|${beam.joint1}|${beam.joint2}`;
     if (processedBeams.has(beamKey)) return;
@@ -316,33 +359,40 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
 
     let serial;
     let primaryGridName;
-    let subGridMarker = '';
+    let subGridMarker = "";
 
     if (beam.isVertical) {
       // 使用座標系統特定的格線
       const coordSystemGrids = getGridsForCoordSystem(grids, beam.coordSystem);
-      const relevantGrids = coordSystemGrids.x.length > 0 ? coordSystemGrids.x : grids.x;
+      const relevantGrids =
+        coordSystemGrids.x.length > 0 ? coordSystemGrids.x : grids.x;
 
       // 將梁座標轉換到該座標系統的局部座標進行比對
       const localCenter = getBeamLocalCenter(beam, beam.coordSystem, grids);
 
-      let onGridLine = relevantGrids.find((g) => Math.abs(localCenter.localX - g.ordinate) < TOLERANCE);
+      let onGridLine = relevantGrids.find(
+        (g) => Math.abs(localCenter.localX - g.ordinate) < TOLERANCE,
+      );
 
       if (onGridLine) {
-        primaryGridName = parseGridName(onGridLine.name);
-        subGridMarker = '';
+        primaryGridName = parseGridName(onGridLine.name).original;
+        subGridMarker = "";
       } else {
         const closestGrid = findClosestGrid(localCenter.localX, relevantGrids);
         if (closestGrid) {
-          primaryGridName = parseGridName(closestGrid.name);
+          primaryGridName = parseGridName(closestGrid.name).original;
 
           // 在同一座標系統內尋找同類型的梁來決定 subGridMarker
           const sameSystemBeams = beamsWithCoords.filter(
-            (b) => b.isVertical && b.coordSystem === beam.coordSystem
+            (b) => b.isVertical && b.coordSystem === beam.coordSystem,
           );
 
-          const sortedGrids = relevantGrids.slice().sort((a, b) => a.ordinate - b.ordinate);
-          const closestIndex = sortedGrids.findIndex((g) => g.name === closestGrid.name);
+          const sortedGrids = relevantGrids
+            .slice()
+            .sort((a, b) => a.ordinate - b.ordinate);
+          const closestIndex = sortedGrids.findIndex(
+            (g) => g.name === closestGrid.name,
+          );
 
           let gridBelow = null;
           let gridAbove = null;
@@ -368,12 +418,15 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
                 sameSystemBeams
                   .filter((b) => {
                     const bLocal = getBeamLocalCenter(b, b.coordSystem, grids);
-                    return bLocal.localX > gridBelow.ordinate && bLocal.localX < gridAbove.ordinate;
+                    return (
+                      bLocal.localX > gridBelow.ordinate &&
+                      bLocal.localX < gridAbove.ordinate
+                    );
                   })
                   .map((b) => {
                     const bLocal = getBeamLocalCenter(b, b.coordSystem, grids);
                     return bLocal.localX.toFixed(2);
-                  })
+                  }),
               ),
             ].sort((a, b) => parseFloat(a) - parseFloat(b));
 
@@ -386,29 +439,42 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
           return;
         }
       }
-      serial = getBeamSerial(beam, coordSystemGrids, false, beam.coordSystem, grids);
+      serial = getBeamSerial(
+        beam,
+        coordSystemGrids,
+        false,
+        beam.coordSystem,
+        grids,
+      );
     } else if (beam.isHorizontal) {
       // 水平梁處理邏輯（與垂直梁類似）
       const coordSystemGrids = getGridsForCoordSystem(grids, beam.coordSystem);
-      const relevantGrids = coordSystemGrids.y.length > 0 ? coordSystemGrids.y : grids.y;
+      const relevantGrids =
+        coordSystemGrids.y.length > 0 ? coordSystemGrids.y : grids.y;
       const localCenter = getBeamLocalCenter(beam, beam.coordSystem, grids);
 
-      let onGridLine = relevantGrids.find((g) => Math.abs(localCenter.localY - g.ordinate) < TOLERANCE);
+      let onGridLine = relevantGrids.find(
+        (g) => Math.abs(localCenter.localY - g.ordinate) < TOLERANCE,
+      );
 
       if (onGridLine) {
-        primaryGridName = parseGridName(onGridLine.name);
-        subGridMarker = '';
+        primaryGridName = parseGridName(onGridLine.name).original;
+        subGridMarker = "";
       } else {
         const closestGrid = findClosestGrid(localCenter.localY, relevantGrids);
         if (closestGrid) {
-          primaryGridName = parseGridName(closestGrid.name);
+          primaryGridName = parseGridName(closestGrid.name).original;
 
           const sameSystemBeams = beamsWithCoords.filter(
-            (b) => b.isHorizontal && b.coordSystem === beam.coordSystem
+            (b) => b.isHorizontal && b.coordSystem === beam.coordSystem,
           );
 
-          const sortedGrids = relevantGrids.slice().sort((a, b) => a.ordinate - b.ordinate);
-          const closestIndex = sortedGrids.findIndex((g) => g.name === closestGrid.name);
+          const sortedGrids = relevantGrids
+            .slice()
+            .sort((a, b) => a.ordinate - b.ordinate);
+          const closestIndex = sortedGrids.findIndex(
+            (g) => g.name === closestGrid.name,
+          );
 
           let gridBelow = null;
           let gridAbove = null;
@@ -434,12 +500,15 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
                 sameSystemBeams
                   .filter((b) => {
                     const bLocal = getBeamLocalCenter(b, b.coordSystem, grids);
-                    return bLocal.localY > gridBelow.ordinate && bLocal.localY < gridAbove.ordinate;
+                    return (
+                      bLocal.localY > gridBelow.ordinate &&
+                      bLocal.localY < gridAbove.ordinate
+                    );
                   })
                   .map((b) => {
                     const bLocal = getBeamLocalCenter(b, b.coordSystem, grids);
                     return bLocal.localY.toFixed(2);
-                  })
+                  }),
               ),
             ].sort((a, b) => parseFloat(a) - parseFloat(b));
 
@@ -452,12 +521,18 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
           return;
         }
       }
-      serial = getBeamSerial(beam, coordSystemGrids, true, beam.coordSystem, grids);
+      serial = getBeamSerial(
+        beam,
+        coordSystemGrids,
+        true,
+        beam.coordSystem,
+        grids,
+      );
     } else if (beam.isDiagonal) {
       // 斜向大梁的編號邏輯
-      const bestCoordSystem = beam.coordSystem || 'GLOBAL';
+      const bestCoordSystem = beam.coordSystem || "GLOBAL";
 
-      if (bestCoordSystem !== 'GLOBAL') {
+      if (bestCoordSystem !== "GLOBAL") {
         const coordSystemGrids = getGridsForCoordSystem(grids, bestCoordSystem);
 
         if (coordSystemGrids.x.length > 0 || coordSystemGrids.y.length > 0) {
@@ -471,17 +546,19 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
           };
 
           const getAngleDiff = (angle1, angle2) => {
-            const diff = Math.abs(normalizeAngle(angle1) - normalizeAngle(angle2));
+            const diff = Math.abs(
+              normalizeAngle(angle1) - normalizeAngle(angle2),
+            );
             return Math.min(diff, 360 - diff);
           };
 
           const angleDiffX = Math.min(
             getAngleDiff(beamAngle, csAngle),
-            getAngleDiff(beamAngle, csAngle + 180)
+            getAngleDiff(beamAngle, csAngle + 180),
           );
           const angleDiffY = Math.min(
             getAngleDiff(beamAngle, csAngle + 90),
-            getAngleDiff(beamAngle, csAngle + 270)
+            getAngleDiff(beamAngle, csAngle + 270),
           );
 
           const isAlongX = angleDiffX < angleDiffY;
@@ -492,52 +569,76 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
 
           if (isAlongX) {
             onGridLine = coordSystemGrids.y.find(
-              (g) => Math.abs(localCenter.localY - g.ordinate) < TOLERANCE
+              (g) => Math.abs(localCenter.localY - g.ordinate) < TOLERANCE,
             );
             if (!onGridLine) {
-              gridBelow = coordSystemGrids.y.slice().reverse().find((g) => g.ordinate < localCenter.localY);
-              gridAbove = coordSystemGrids.y.find((g) => g.ordinate > localCenter.localY);
+              gridBelow = coordSystemGrids.y
+                .slice()
+                .reverse()
+                .find((g) => g.ordinate < localCenter.localY);
+              gridAbove = coordSystemGrids.y.find(
+                (g) => g.ordinate > localCenter.localY,
+              );
             }
           } else {
             onGridLine = coordSystemGrids.x.find(
-              (g) => Math.abs(localCenter.localX - g.ordinate) < TOLERANCE
+              (g) => Math.abs(localCenter.localX - g.ordinate) < TOLERANCE,
             );
             if (!onGridLine) {
-              gridBelow = coordSystemGrids.x.slice().reverse().find((g) => g.ordinate < localCenter.localX);
-              gridAbove = coordSystemGrids.x.find((g) => g.ordinate > localCenter.localX);
+              gridBelow = coordSystemGrids.x
+                .slice()
+                .reverse()
+                .find((g) => g.ordinate < localCenter.localX);
+              gridAbove = coordSystemGrids.x.find(
+                (g) => g.ordinate > localCenter.localX,
+              );
             }
           }
 
           if (onGridLine) {
-            primaryGridName = parseGridName(onGridLine.name);
-            subGridMarker = '';
+            primaryGridName = parseGridName(onGridLine.name).original;
+            subGridMarker = "";
           } else if (gridBelow || gridAbove) {
             const referenceGrid = gridBelow || gridAbove;
-            primaryGridName = parseGridName(referenceGrid.name);
+            primaryGridName = parseGridName(referenceGrid.name).original;
 
             if (gridBelow && gridAbove) {
               const relevantBeams = beamsWithCoords.filter((b) => {
                 if (!b.isDiagonal) return false;
-                const bCs = b.coordSystem || 'GLOBAL';
+                const bCs = b.coordSystem || "GLOBAL";
                 if (bCs !== bestCoordSystem) return false;
                 const bLocal = getBeamLocalCenter(b, bCs, grids);
                 if (isAlongX) {
-                  return bLocal.localY > gridBelow.ordinate && bLocal.localY < gridAbove.ordinate;
+                  return (
+                    bLocal.localY > gridBelow.ordinate &&
+                    bLocal.localY < gridAbove.ordinate
+                  );
                 } else {
-                  return bLocal.localX > gridBelow.ordinate && bLocal.localX < gridAbove.ordinate;
+                  return (
+                    bLocal.localX > gridBelow.ordinate &&
+                    bLocal.localX < gridAbove.ordinate
+                  );
                 }
               });
 
               const uniqueCoords = [
                 ...new Set(
                   relevantBeams.map((b) => {
-                    const bLocal = getBeamLocalCenter(b, b.coordSystem || 'GLOBAL', grids);
-                    return isAlongX ? bLocal.localY.toFixed(2) : bLocal.localX.toFixed(2);
-                  })
+                    const bLocal = getBeamLocalCenter(
+                      b,
+                      b.coordSystem || "GLOBAL",
+                      grids,
+                    );
+                    return isAlongX
+                      ? bLocal.localY.toFixed(2)
+                      : bLocal.localX.toFixed(2);
+                  }),
                 ),
               ].sort((a, b) => parseFloat(a) - parseFloat(b));
 
-              const targetCoord = isAlongX ? localCenter.localY.toFixed(2) : localCenter.localX.toFixed(2);
+              const targetCoord = isAlongX
+                ? localCenter.localY.toFixed(2)
+                : localCenter.localX.toFixed(2);
               const rank = uniqueCoords.indexOf(targetCoord);
 
               if (rank !== -1) {
@@ -547,12 +648,18 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
           }
 
           if (primaryGridName) {
-            serial = getBeamSerial(beam, coordSystemGrids, isAlongX, bestCoordSystem, grids);
+            serial = getBeamSerial(
+              beam,
+              coordSystemGrids,
+              isAlongX,
+              bestCoordSystem,
+              grids,
+            );
 
             console.log(
               `[斜向梁編號] ${beam.name} 使用 ${bestCoordSystem} 系統 (rz=${csAngle}°)，方向=${
-                isAlongX ? 'X軸' : 'Y軸'
-              }，格線=${primaryGridName}${subGridMarker}，序號=${serial}`
+                isAlongX ? "X軸" : "Y軸"
+              }，格線=${primaryGridName}${subGridMarker}，序號=${serial}`,
             );
 
             labelComponentMap.set(beamKey, {
@@ -574,7 +681,11 @@ export function generateLabelsForStory(beamsInStory, joints, grids, reservedSeri
     }
 
     // 支援字串型序號 (Secondary 格線)
-    if (serial !== undefined && serial !== -1 && (typeof serial === 'string' || !isNaN(serial))) {
+    if (
+      serial !== undefined &&
+      serial !== -1 &&
+      (typeof serial === "string" || !isNaN(serial))
+    ) {
       labelComponentMap.set(beamKey, {
         isVertical: beam.isVertical,
         primaryGridName,
@@ -620,7 +731,12 @@ function getComponentBounds(component, joints) {
 /**
  * 識別建築群組（連通的梁區塊）
  */
-export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = false, globalSymmetryAxisX = null) {
+export function findBuildingComponents(
+  allBeamsOnStory,
+  joints,
+  useMirrorMode = false,
+  globalSymmetryAxisX = null,
+) {
   if (!allBeamsOnStory || allBeamsOnStory.length === 0) return [];
 
   const GEOMETRIC_TOLERANCE = 0.01;
@@ -640,10 +756,14 @@ export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = 
     if (distance(beamA.p1, beamB.p2) < GEOMETRIC_TOLERANCE) return true;
     if (distance(beamA.p2, beamB.p1) < GEOMETRIC_TOLERANCE) return true;
     if (distance(beamA.p2, beamB.p2) < GEOMETRIC_TOLERANCE) return true;
-    if (isPointOnSegment(beamA.p1, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamA.p2, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamB.p1, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamB.p2, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE)) return true;
+    if (isPointOnSegment(beamA.p1, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamA.p2, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamB.p1, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamB.p2, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE))
+      return true;
     return false;
   }
 
@@ -679,7 +799,9 @@ export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = 
   // 鏡像模式下，按對稱軸重新分組
   if (useMirrorMode && beamsWithCoords.length > 0) {
     const SYMMETRY_TOLERANCE = mirrorState.symmetryTolerance || 0.5;
-    console.log(`\n[分群模式] 鏡像模式啟用，按對稱軸重新分組 (原始 components: ${components.length})`);
+    console.log(
+      `\n[分群模式] 鏡像模式啟用，按對稱軸重新分組 (原始 components: ${components.length})`,
+    );
 
     const allBeamsFlattened = components.flat();
 
@@ -692,9 +814,13 @@ export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = 
       const minX = Math.min(...allXCoords);
       const maxX = Math.max(...allXCoords);
       symmetryAxisX = (minX + maxX) / 2;
-      console.log(`[分群模式] 使用當前樓層計算對稱軸 X ≈ ${symmetryAxisX.toFixed(3)}`);
+      console.log(
+        `[分群模式] 使用當前樓層計算對稱軸 X ≈ ${symmetryAxisX.toFixed(3)}`,
+      );
     } else {
-      console.log(`[分群模式] 使用全域對稱軸 X = ${symmetryAxisX.toFixed(3)} ✓`);
+      console.log(
+        `[分群模式] 使用全域對稱軸 X = ${symmetryAxisX.toFixed(3)} ✓`,
+      );
     }
 
     const leftBeams = [];
@@ -714,7 +840,9 @@ export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = 
       }
     });
 
-    console.log(`[分群結果] 左側: ${leftBeams.length}, 中央: ${centerBeams.length}, 右側: ${rightBeams.length}`);
+    console.log(
+      `[分群結果] 左側: ${leftBeams.length}, 中央: ${centerBeams.length}, 右側: ${rightBeams.length}`,
+    );
 
     const newComponents = [];
     if (leftBeams.length > 0 || centerBeams.length > 0) {
@@ -724,7 +852,9 @@ export function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = 
       newComponents.push(rightBeams);
     }
 
-    console.log(`[分群模式] 重新分組完成，產生 ${newComponents.length} 個 component`);
+    console.log(
+      `[分群模式] 重新分組完成，產生 ${newComponents.length} 個 component`,
+    );
     return newComponents;
   }
 
@@ -742,16 +872,20 @@ export function generateSecondaryBeamLabels(
   prefix,
   globalSymmetryAxisX = null,
   reservedSerials = new Set(),
-  grids = { x: [], y: [], coordSystems: {} }
+  grids = { x: [], y: [], coordSystems: {} },
 ) {
   const allLabels = new Map();
-  const mirrorModeToggle = document.getElementById('mirrorModeToggle');
+  const mirrorModeToggle = document.getElementById("mirrorModeToggle");
   const useMirrorMode = mirrorModeToggle ? mirrorModeToggle.checked : false;
-  
+
   const SYMMETRY_TOLERANCE = mirrorState.symmetryTolerance || 0.5;
   const MATCHING_TOLERANCE = mirrorState.matchingTolerance || 0.8;
 
-  const coreNumberingEngine = (beamsToNumber, startCounter = 1) => {
+  const coreNumberingEngine = (
+    beamsToNumber,
+    startCounter = 1,
+    verticalStartOverride = null,
+  ) => {
     const labels = new Map();
     let counter = startCounter;
     const beamsWithData = beamsToNumber
@@ -768,7 +902,11 @@ export function generateSecondaryBeamLabels(
           joint2: b.joint2,
         };
         const bestCoordSystem = findBestCoordSystemForBeam(beamData, grids);
-        const orientation = getBeamOrientationInCoordSystem(beamData, bestCoordSystem, grids);
+        const orientation = getBeamOrientationInCoordSystem(
+          beamData,
+          bestCoordSystem,
+          grids,
+        );
 
         let startJointName = b.joint1,
           endJointName = b.joint2;
@@ -797,14 +935,14 @@ export function generateSecondaryBeamLabels(
         .sort(
           (a, b) =>
             joints[a.startJointName].y - joints[b.startJointName].y ||
-            joints[a.startJointName].x - joints[b.startJointName].x
+            joints[a.startJointName].x - joints[b.startJointName].x,
         ),
       beamsWithData
         .filter((b) => b.isVertical)
         .sort(
           (a, b) =>
             joints[a.startJointName].x - joints[b.startJointName].x ||
-            joints[a.startJointName].y - joints[b.startJointName].y
+            joints[a.startJointName].y - joints[b.startJointName].y,
         ),
     ];
 
@@ -822,8 +960,17 @@ export function generateSecondaryBeamLabels(
     let isVerticalRun = false;
     beamGroups.forEach((group) => {
       if (isVerticalRun && counter > 1) {
-        const lastNum = counter - 1;
-        counter = lastNum % 10 === 0 ? lastNum + 1 : Math.ceil(lastNum / 10) * 10 + 1;
+        // 如果有指定垂直小梁起始編號，優先使用
+        if (verticalStartOverride !== null) {
+          counter = verticalStartOverride;
+          // 重置為 null，避免後續 component 再次使用
+          verticalStartOverride = null;
+        } else {
+          // 使用預設的無條件進位規則
+          const lastNum = counter - 1;
+          counter =
+            lastNum % 10 === 0 ? lastNum + 1 : Math.ceil(lastNum / 10) * 10 + 1;
+        }
       }
       for (const startBeam of group) {
         const startKey = `${startBeam.name}|${startBeam.joint1}|${startBeam.joint2}`;
@@ -834,17 +981,22 @@ export function generateSecondaryBeamLabels(
         while (true) {
           const nextLink = group.find((b) => {
             const nextKey = `${b.name}|${b.joint1}|${b.joint2}`;
-            return !processed.has(nextKey) && b.startJointName === currentLink.endJointName;
+            return (
+              !processed.has(nextKey) &&
+              b.startJointName === currentLink.endJointName
+            );
           });
           if (nextLink) {
             chain.push(nextLink);
-            processed.add(`${nextLink.name}|${nextLink.joint1}|${nextLink.joint2}`);
+            processed.add(
+              `${nextLink.name}|${nextLink.joint1}|${nextLink.joint2}`,
+            );
             currentLink = nextLink;
           } else {
             break;
           }
         }
-        
+
         // 跳過預留的序號
         while (reservedSerials.has(`${prefix.toLowerCase()}:${counter}`)) {
           counter++;
@@ -869,8 +1021,17 @@ export function generateSecondaryBeamLabels(
   };
 
   const allBeamsOnStory = [...secondaryBeamsToNumber, ...mainBeamsInStory];
-  const componentsRaw = findBuildingComponents(allBeamsOnStory, joints, useMirrorMode, globalSymmetryAxisX)
-    .map((comp) => comp.filter((b) => secondaryBeamsToNumber.some((sb) => sb.name === b.name)))
+  const componentsRaw = findBuildingComponents(
+    allBeamsOnStory,
+    joints,
+    useMirrorMode,
+    globalSymmetryAxisX,
+  )
+    .map((comp) =>
+      comp.filter((b) =>
+        secondaryBeamsToNumber.some((sb) => sb.name === b.name),
+      ),
+    )
     .filter((comp) => comp.length > 0);
 
   if (componentsRaw.length === 0) return allLabels;
@@ -883,9 +1044,25 @@ export function generateSecondaryBeamLabels(
     .sort((a, b) => a.bounds.minX - b.bounds.minX);
 
   if (!useMirrorMode || components.length < 2) {
-    let globalCounter = 1;
+    // 決定水平和垂直小梁的起始編號
+    const horizontalStart = secondaryBeamConfig.useCustomStart
+      ? secondaryBeamConfig.horizontalStart
+      : 1;
+    const verticalStart = secondaryBeamConfig.useCustomStart
+      ? secondaryBeamConfig.verticalStart
+      : null;
+
+    console.log(
+      `[小梁編號設定] 客製化: ${secondaryBeamConfig.useCustomStart}, 水平起始: ${horizontalStart}, 垂直起始: ${verticalStart || "無條件進位"}`,
+    );
+
+    let globalCounter = horizontalStart;
     for (const comp of components) {
-      const { labels, nextCounter } = coreNumberingEngine(comp.component, globalCounter);
+      const { labels, nextCounter } = coreNumberingEngine(
+        comp.component,
+        globalCounter,
+        verticalStart,
+      );
       labels.forEach((value, key) => allLabels.set(key, value));
       globalCounter = nextCounter;
     }
@@ -899,9 +1076,11 @@ export function generateSecondaryBeamLabels(
       axisX = (master.bounds.maxX + slave.bounds.minX) / 2;
     }
 
-    const currentFloor = secondaryBeamsToNumber[0]?.story || '未知樓層';
+    const currentFloor = secondaryBeamsToNumber[0]?.story || "未知樓層";
     console.log(`=============================================`);
-    console.log(`[鏡像模式 - ${currentFloor}] 使用對稱軸 X = ${axisX.toFixed(3)}`);
+    console.log(
+      `[鏡像模式 - ${currentFloor}] 使用對稱軸 X = ${axisX.toFixed(3)}`,
+    );
     console.log(`=============================================`);
 
     // 識別對稱軸上的梁
@@ -926,13 +1105,26 @@ export function generateSecondaryBeamLabels(
     });
 
     const masterWithAxisBeams = [...masterBeamsNotOnAxis, ...beamsOnAxis];
-    const { labels: masterLabels, nextCounter } = coreNumberingEngine(masterWithAxisBeams, 1);
+
+    // 鏡像模式也要支援客製化起始編號
+    const horizontalStartMirror = secondaryBeamConfig.useCustomStart
+      ? secondaryBeamConfig.horizontalStart
+      : 1;
+    const verticalStartMirror = secondaryBeamConfig.useCustomStart
+      ? secondaryBeamConfig.verticalStart
+      : null;
+
+    const { labels: masterLabels, nextCounter } = coreNumberingEngine(
+      masterWithAxisBeams,
+      horizontalStartMirror,
+      verticalStartMirror,
+    );
     masterLabels.forEach((value, key) => allLabels.set(key, value));
 
     // 鏡像配對
     const matchedSlaves = new Set();
     const masterBeamsToMirror = master.component.filter(
-      (beam) => !isBeamOnSymmetryAxis(beam, joints, axisX, SYMMETRY_TOLERANCE)
+      (beam) => !isBeamOnSymmetryAxis(beam, joints, axisX, SYMMETRY_TOLERANCE),
     );
 
     masterBeamsToMirror.forEach((masterBeam) => {
@@ -942,10 +1134,15 @@ export function generateSecondaryBeamLabels(
 
       const master_p1 = joints[masterBeam.joint1];
       const master_p2 = joints[masterBeam.joint2];
-      const masterMidpoint = { x: (master_p1.x + master_p2.x) / 2, y: (master_p1.y + master_p2.y) / 2 };
+      const masterMidpoint = {
+        x: (master_p1.x + master_p2.x) / 2,
+        y: (master_p1.y + master_p2.y) / 2,
+      };
       const masterLength = distance(master_p1, master_p2);
-      const masterIsHorizontal = Math.abs(master_p1.y - master_p2.y) < DIRECTION_TOLERANCE;
-      const masterIsVertical = Math.abs(master_p1.x - master_p2.x) < DIRECTION_TOLERANCE;
+      const masterIsHorizontal =
+        Math.abs(master_p1.y - master_p2.y) < DIRECTION_TOLERANCE;
+      const masterIsVertical =
+        Math.abs(master_p1.x - master_p2.x) < DIRECTION_TOLERANCE;
       const mirroredMidpoint = mirrorPoint(masterMidpoint, axisX);
 
       let bestMatch = null;
@@ -959,14 +1156,22 @@ export function generateSecondaryBeamLabels(
         const slave_p2 = joints[slaveBeam.joint2];
         if (!slave_p1 || !slave_p2) return;
 
-        const slaveIsHorizontal = Math.abs(slave_p1.y - slave_p2.y) < DIRECTION_TOLERANCE;
-        const slaveIsVertical = Math.abs(slave_p1.x - slave_p2.x) < DIRECTION_TOLERANCE;
+        const slaveIsHorizontal =
+          Math.abs(slave_p1.y - slave_p2.y) < DIRECTION_TOLERANCE;
+        const slaveIsVertical =
+          Math.abs(slave_p1.x - slave_p2.x) < DIRECTION_TOLERANCE;
 
-        if (masterIsHorizontal !== slaveIsHorizontal || masterIsVertical !== slaveIsVertical) {
+        if (
+          masterIsHorizontal !== slaveIsHorizontal ||
+          masterIsVertical !== slaveIsVertical
+        ) {
           return;
         }
 
-        const slaveMidpoint = { x: (slave_p1.x + slave_p2.x) / 2, y: (slave_p1.y + slave_p2.y) / 2 };
+        const slaveMidpoint = {
+          x: (slave_p1.x + slave_p2.x) / 2,
+          y: (slave_p1.y + slave_p2.y) / 2,
+        };
         const slaveLength = distance(slave_p1, slave_p2);
 
         const midDist = distance(slaveMidpoint, mirroredMidpoint);
@@ -975,7 +1180,12 @@ export function generateSecondaryBeamLabels(
         const score = midDist + lenDiff * 0.5;
 
         const lenTolerance = Math.max(masterLength * 0.15, 0.5);
-        if (yDiff < MATCHING_TOLERANCE && midDist < MATCHING_TOLERANCE * 2 && lenDiff < lenTolerance && score < bestScore) {
+        if (
+          yDiff < MATCHING_TOLERANCE &&
+          midDist < MATCHING_TOLERANCE * 2 &&
+          lenDiff < lenTolerance &&
+          score < bestScore
+        ) {
           bestMatch = slaveBeam;
           bestScore = score;
         }
@@ -983,7 +1193,9 @@ export function generateSecondaryBeamLabels(
 
       if (bestMatch) {
         const slaveKey = `${bestMatch.name}|${bestMatch.joint1}|${bestMatch.joint2}`;
-        console.log(`[配對成功] ${labelInfo.newLabel}: ${masterBeam.name} ↔ ${bestMatch.name}`);
+        console.log(
+          `[配對成功] ${labelInfo.newLabel}: ${masterBeam.name} ↔ ${bestMatch.name}`,
+        );
         allLabels.set(slaveKey, { newLabel: labelInfo.newLabel });
         matchedSlaves.add(slaveKey);
       }
@@ -999,7 +1211,8 @@ export function generateSecondaryBeamLabels(
 
     if (unmatchedSlaveBeams.length > 0) {
       console.log(`\n[未配對 Slave 梁] 共 ${unmatchedSlaveBeams.length} 根`);
-      const { labels: unmatchedLabels, nextCounter: updatedCounter } = coreNumberingEngine(unmatchedSlaveBeams, orphanCounter);
+      const { labels: unmatchedLabels, nextCounter: updatedCounter } =
+        coreNumberingEngine(unmatchedSlaveBeams, orphanCounter);
       unmatchedLabels.forEach((value, key) => allLabels.set(key, value));
       orphanCounter = updatedCounter;
     }
@@ -1007,13 +1220,18 @@ export function generateSecondaryBeamLabels(
     // 處理額外的 component
     if (components.length > 2) {
       for (let i = 2; i < components.length; i++) {
-        const { labels, nextCounter: updatedCounter } = coreNumberingEngine(components[i].component, orphanCounter);
+        const { labels, nextCounter: updatedCounter } = coreNumberingEngine(
+          components[i].component,
+          orphanCounter,
+        );
         labels.forEach((value, key) => allLabels.set(key, value));
         orphanCounter = updatedCounter;
       }
     }
 
-    console.log(`\n[鏡像模式完成 - ${currentFloor}] 總共編號 ${allLabels.size} 根小梁`);
+    console.log(
+      `\n[鏡像模式完成 - ${currentFloor}] 總共編號 ${allLabels.size} 根小梁`,
+    );
     console.log(`=============================================\n`);
   }
 
@@ -1029,14 +1247,19 @@ export function generateSecondaryBeamLabels(
  */
 export function applySpecialPrefixRules(allBeams) {
   const processPrefix = (prefix) => {
-    const targetBeams = allBeams.filter((b) => b.prop && b.prop.toUpperCase().startsWith(prefix));
+    const targetBeams = allBeams.filter(
+      (b) => b.prop && b.prop.toUpperCase().startsWith(prefix),
+    );
     if (targetBeams.length === 0) return null;
     const uniqueProps = [...new Set(targetBeams.map((b) => b.prop))];
     const propRanks = uniqueProps
       .map((prop) => {
         const match = prop.match(/(\d+)[xX](\d+)/);
         if (match) {
-          return { propName: prop, area: parseInt(match[1], 10) * parseInt(match[2], 10) };
+          return {
+            propName: prop,
+            area: parseInt(match[1], 10) * parseInt(match[2], 10),
+          };
         }
         return { propName: prop, area: Infinity };
       })
@@ -1048,9 +1271,9 @@ export function applySpecialPrefixRules(allBeams) {
     return propToLabelMap;
   };
 
-  const wbLabelMap = processPrefix('WB');
-  const fwbLabelMap = processPrefix('FWB');
-  
+  const wbLabelMap = processPrefix("WB");
+  const fwbLabelMap = processPrefix("FWB");
+
   return allBeams.map((beam) => {
     if (wbLabelMap && wbLabelMap.has(beam.prop)) {
       return { ...beam, newLabel: wbLabelMap.get(beam.prop) };
@@ -1074,23 +1297,25 @@ let standardFloorGroupsCache = null;
 export function generateFloorFingerprint(story, allBeams, precision = 2) {
   const beamsOnStory = allBeams.filter((b) => b.story === story);
   if (beamsOnStory.length === 0) {
-    return '';
+    return "";
   }
 
   const beamSignatures = beamsOnStory
     .map((beam) => {
-      if (!beam.j1 || !beam.j2) return '';
+      if (!beam.j1 || !beam.j2) return "";
       const x1 = beam.j1.x.toFixed(precision);
       const y1 = beam.j1.y.toFixed(precision);
       const x2 = beam.j2.x.toFixed(precision);
       const y2 = beam.j2.y.toFixed(precision);
       const point1Str = `${x1},${y1}`;
       const point2Str = `${x2},${y2}`;
-      return point1Str < point2Str ? `${point1Str}|${point2Str}` : `${point2Str}|${point1Str}`;
+      return point1Str < point2Str
+        ? `${point1Str}|${point2Str}`
+        : `${point2Str}|${point1Str}`;
     })
     .filter(Boolean);
 
-  return beamSignatures.sort().join(';');
+  return beamSignatures.sort().join(";");
 }
 
 /**
@@ -1103,7 +1328,9 @@ export function createStandardFloorGroups() {
 
   if (availableStories.length === 0) return [];
 
-  const sortedStories = [...availableStories].sort((a, b) => storyOrderInfo[a] - storyOrderInfo[b]);
+  const sortedStories = [...availableStories].sort(
+    (a, b) => storyOrderInfo[a] - storyOrderInfo[b],
+  );
 
   const fingerprints = sortedStories.map((story) => ({
     story,
@@ -1116,7 +1343,10 @@ export function createStandardFloorGroups() {
   let currentGroup = [fingerprints[0].story];
 
   for (let i = 1; i < fingerprints.length; i++) {
-    if (fingerprints[i].fingerprint === fingerprints[i - 1].fingerprint && fingerprints[i].fingerprint !== '') {
+    if (
+      fingerprints[i].fingerprint === fingerprints[i - 1].fingerprint &&
+      fingerprints[i].fingerprint !== ""
+    ) {
       currentGroup.push(fingerprints[i].story);
     } else {
       groups.push(currentGroup);
@@ -1135,7 +1365,9 @@ export function getStandardFloorGroupForStory(story) {
   if (!standardFloorGroupsCache) {
     standardFloorGroupsCache = createStandardFloorGroups();
   }
-  return standardFloorGroupsCache.find((group) => group.includes(story)) || null;
+  return (
+    standardFloorGroupsCache.find((group) => group.includes(story)) || null
+  );
 }
 
 /**
@@ -1146,10 +1378,16 @@ export function findBeamsAtSamePosition(beam, floors) {
   const fullDrawableBeams = window.fullDrawableBeams || [];
   const fullProcessedBeams = window.fullProcessedBeams || [];
 
-  const currentDrawableBeam = fullDrawableBeams.find((b) => b.story === beam.story && b.name === beam.name);
+  const currentDrawableBeam = fullDrawableBeams.find(
+    (b) => b.story === beam.story && b.name === beam.name,
+  );
 
-  if (!currentDrawableBeam || !currentDrawableBeam.j1 || !currentDrawableBeam.j2) {
-    console.log('[連動標準層] 找不到當前梁的座標資訊', beam.story, beam.name);
+  if (
+    !currentDrawableBeam ||
+    !currentDrawableBeam.j1 ||
+    !currentDrawableBeam.j2
+  ) {
+    console.log("[連動標準層] 找不到當前梁的座標資訊", beam.story, beam.name);
     return results;
   }
 
@@ -1167,12 +1405,12 @@ export function findBeamsAtSamePosition(beam, floors) {
         b.j1.x === j1.x &&
         b.j1.y === j1.y &&
         b.j2.x === j2.x &&
-        b.j2.y === j2.y
+        b.j2.y === j2.y,
     );
 
     if (matchingDrawableBeam) {
       const matchingProcessedBeam = fullProcessedBeams.find(
-        (b) => b.story === floorName && b.name === matchingDrawableBeam.name
+        (b) => b.story === floorName && b.name === matchingDrawableBeam.name,
       );
 
       if (matchingProcessedBeam) {

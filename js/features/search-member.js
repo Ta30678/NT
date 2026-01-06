@@ -1,11 +1,11 @@
 /**
  * BEAM-NAMINGTOOL - 搜尋桿件功能模組
- * 
+ *
  * 提供按 ETABS 編號搜尋並定位梁的功能
  */
 
-import { appState } from '../config/constants.js';
-import { clearAllSelections, updateBeamVisualState } from './selection.js';
+import { appState } from "../config/constants.js";
+import { clearAllSelections, updateBeamVisualState } from "./selection.js";
 
 // ============================================
 // 搜尋對話框函數
@@ -55,14 +55,17 @@ export function searchMember() {
     return;
   }
 
-  if (!appState.fullProcessedBeams || appState.fullProcessedBeams.length === 0) {
+  if (
+    !appState.fullProcessedBeams ||
+    appState.fullProcessedBeams.length === 0
+  ) {
     resultsDiv.innerHTML =
       '<div style="color: var(--theme-warning); text-align: center;">⚠️ 請先上傳 E2K 檔案並執行編號</div>';
     return;
   }
 
   const matchedBeams = appState.fullProcessedBeams.filter(
-    (beam) => beam.name && beam.name.toUpperCase().includes(searchTerm)
+    (beam) => beam.name && beam.name.toUpperCase().includes(searchTerm),
   );
 
   if (matchedBeams.length === 0) {
@@ -98,11 +101,15 @@ export function searchMember() {
         <div style="font-size: 0.85em; color: var(--theme-text-secondary); margin-top: 5px;">
           📍 樓層: ${beam.story || "N/A"} | 斷面: ${beam.prop || "N/A"}
         </div>
-        ${beam.j1 && beam.j2 ? `
+        ${
+          beam.j1 && beam.j2
+            ? `
         <div style="font-size: 0.8em; color: var(--theme-text-secondary); margin-top: 3px;">
           座標: (${beam.j1.x.toFixed(2)}, ${beam.j1.y.toFixed(2)}) → (${beam.j2.x.toFixed(2)}, ${beam.j2.y.toFixed(2)})
         </div>
-        ` : ""}
+        `
+            : ""
+        }
       </div>
     `;
     resultsHTML += beamInfo;
@@ -145,7 +152,7 @@ export function locateAndHighlightBeam(beamName) {
   // 等待 DOM 更新後執行高亮
   setTimeout(() => {
     const beamElements = svgElement.querySelectorAll(
-      `[data-beam-name="${beamName}"]`
+      `[data-beam-name="${beamName}"]`,
     );
 
     if (beamElements.length === 0) {

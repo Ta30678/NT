@@ -13,7 +13,7 @@ export function summarizeFloors(floors, storyOrder) {
   if (floors.length === 1) return floors[0];
 
   const sortedFloors = [...floors].sort(
-    (a, b) => storyOrder[a] - storyOrder[b]
+    (a, b) => storyOrder[a] - storyOrder[b],
   );
   const ranges = [];
   let rangeStart = sortedFloors[0];

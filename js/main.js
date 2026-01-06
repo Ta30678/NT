@@ -1,11 +1,11 @@
 /**
  * BEAM-NAMINGTOOL - 主入口模組 (更新版)
- * 
+ *
  * 此檔案負責：
  * 1. 匯入所有子模組
  * 2. 初始化應用程式
  * 3. 將需要從 HTML 呼叫的函數掛載到 window 物件
- * 
+ *
  * 使用方式：在 index.html 中加入
  * <script type="module" src="js/main.js"></script>
  */
@@ -29,8 +29,9 @@ import {
   DIRECTION_TOLERANCE,
   appState,
   mirrorState,
+  secondaryBeamConfig,
   calculateOffset,
-} from './config/constants.js';
+} from "./config/constants.js";
 
 // 幾何計算工具
 import {
@@ -40,7 +41,7 @@ import {
   pointToLineDistance,
   lineIntersectsLine,
   lineIntersectsRect,
-} from './utils/geometry.js';
+} from "./utils/geometry.js";
 
 // 座標轉換工具
 import {
@@ -49,7 +50,7 @@ import {
   getSVGPoint,
   globalToLocal,
   svgToEtabsCoord as svgToEtabsCoordUtil,
-} from './utils/coord-transform.js';
+} from "./utils/coord-transform.js";
 
 // E2K 解析器
 import {
@@ -58,7 +59,7 @@ import {
   parseFrames,
   findClosestGrid,
   parseGridName,
-} from './core/parser.js';
+} from "./core/parser.js";
 
 // 梁編號核心邏輯
 import {
@@ -77,7 +78,7 @@ import {
   findBeamsAtSamePosition,
   invalidateStandardFloorGroupsCache,
   updateSequentialBeamLabels,
-} from './core/beam-labeler.js';
+} from "./core/beam-labeler.js";
 
 // UI 狀態管理
 import {
@@ -85,23 +86,23 @@ import {
   hideInlineStatus,
   updateFontSize,
   initFontSizeWheelSupport,
-} from './ui/status.js';
+} from "./ui/status.js";
 
 // AutoCAD 匯出
 import {
   calculateGridRelation,
   exportToJSON,
   exportToJSONV2,
-} from './export/autocad-export.js';
+} from "./export/autocad-export.js";
 
 // Excel 匯出
-import { exportToExcel } from './export/excel-export.js';
+import { exportToExcel } from "./export/excel-export.js";
 
 // Input Helpers
 import {
   setupSelectWheelListeners,
   setupKeyboardListeners,
-} from './ui/input-helpers.js';
+} from "./ui/input-helpers.js";
 
 // Grid 配置功能
 import {
@@ -110,7 +111,7 @@ import {
   COORDSYSTEM_COLORS,
   getCoordSystemColor,
   getCoordSystemOffset,
-} from './features/grid-config.js';
+} from "./features/grid-config.js";
 
 // Fixed Label 功能
 import {
@@ -125,7 +126,7 @@ import {
   addFixedLabelRuleModal,
   updateFixedLabelModalList,
   removeFixedLabelRuleModal,
-} from './features/fixed-label.js';
+} from "./features/fixed-label.js";
 
 // 選取功能
 import {
@@ -138,7 +139,7 @@ import {
   clearAllSelections,
   clearSelectedBeamLabels,
   onKeyDown,
-} from './features/selection.js';
+} from "./features/selection.js";
 
 // 搜尋功能
 import {
@@ -146,7 +147,7 @@ import {
   closeSearchMemberDialog,
   searchMember,
   locateAndHighlightBeam,
-} from './features/search-member.js';
+} from "./features/search-member.js";
 
 // 批量編輯
 import {
@@ -155,7 +156,7 @@ import {
   saveBatchEdit,
   handleAutoIncrement,
   attachAutoIncrementListeners,
-} from './features/batch-edit.js';
+} from "./features/batch-edit.js";
 
 // Mirror 模式
 import {
@@ -197,7 +198,7 @@ import {
   updateMirrorStatusText,
   openMirrorSettingsModal,
   closeMirrorSettingsModal,
-} from './features/mirror-mode.js';
+} from "./features/mirror-mode.js";
 
 // ============================================
 // 掛載全域函數（給 HTML onclick 使用）
@@ -217,6 +218,7 @@ window.DIRECTION_TOLERANCE = DIRECTION_TOLERANCE;
 // 共享狀態
 window.appState = appState;
 window.mirrorState = mirrorState;
+window.secondaryBeamConfig = secondaryBeamConfig;
 
 // 工具函數
 window.calculateOffset = calculateOffset;
@@ -353,34 +355,34 @@ window.closeMirrorSettingsModal = closeMirrorSettingsModal;
 // 初始化
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('📦 BEAM-NAMINGTOOL 模組化版本載入完成');
-  console.log('已載入模組：');
-  console.log('  ✓ config/constants.js - 常數和全域狀態');
-  console.log('  ✓ utils/geometry.js - 幾何計算工具');
-  console.log('  ✓ utils/coord-transform.js - 座標轉換工具');
-  console.log('  ✓ core/parser.js - E2K 解析器');
-  console.log('  ✓ export/autocad-export.js - AutoCAD 匯出');
-  console.log('  ✓ features/fixed-label.js - 固定編號功能');
-  console.log('  ✓ features/selection.js - 圈選功能');
-  console.log('  ✓ features/search-member.js - 搜尋功能');
-  console.log('  ✓ features/batch-edit.js - 批量編輯');
-  console.log('  ✓ features/mirror-mode.js - 鏡像對稱模式 ⚠️核心');
-  
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("📦 BEAM-NAMINGTOOL 模組化版本載入完成");
+  console.log("已載入模組：");
+  console.log("  ✓ config/constants.js - 常數和全域狀態");
+  console.log("  ✓ utils/geometry.js - 幾何計算工具");
+  console.log("  ✓ utils/coord-transform.js - 座標轉換工具");
+  console.log("  ✓ core/parser.js - E2K 解析器");
+  console.log("  ✓ export/autocad-export.js - AutoCAD 匯出");
+  console.log("  ✓ features/fixed-label.js - 固定編號功能");
+  console.log("  ✓ features/selection.js - 圈選功能");
+  console.log("  ✓ features/search-member.js - 搜尋功能");
+  console.log("  ✓ features/batch-edit.js - 批量編輯");
+  console.log("  ✓ features/mirror-mode.js - 鏡像對稱模式 ⚠️核心");
+
   // 注意：以下初始化函數已由 index.html 原始代碼呼叫
   // 避免重複呼叫造成衝突
   // loadSymmetrySettings();
   // loadSymmetryAxisSettings();
   // loadFixedLabelRules();
   // initSymmetrySettingsWheelSupport();
-  
+
   // 更新狀態顯示（這些只是更新 UI，可以安全呼叫）
   // updateMirrorStatusText();
   // updateFixedLabelSummary();
   // updateFixedLabelButtonState();
-  
-  console.log('✅ 模組掛載完成（初始化由 index.html 處理）');
-  
+
+  console.log("✅ 模組掛載完成（初始化由 index.html 處理）");
+
   // 初始化 UI 輔助功能
   setupSelectWheelListeners();
   setupKeyboardListeners();
@@ -403,11 +405,12 @@ export {
   TOLERANCE,
   COORD_SYSTEM_COLORS,
   DIRECTION_TOLERANCE,
-  
+
   // 狀態
   appState,
   mirrorState,
-  
+  secondaryBeamConfig,
+
   // 工具函數
   calculateOffset,
   distance,
@@ -420,19 +423,19 @@ export {
   getSVGCoords,
   getSVGPoint,
   globalToLocal,
-  
+
   // 解析器
   parseGrids,
   parseJoints,
   parseFrames,
   findClosestGrid,
   parseGridName,
-  
+
   // 匯出
   calculateGridRelation,
   exportToJSON,
   exportToJSONV2,
-  
+
   // Mirror
   detectSymmetryAxis,
   mirrorPoint,

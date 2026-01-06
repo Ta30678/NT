@@ -1,14 +1,14 @@
 /**
  * BEAM-NAMINGTOOL - 批量編輯功能模組
- * 
+ *
  * 此模組處理多梁同時編輯功能
  * 支援選取範圍內順號模式
- * 
+ *
  * [注意] 此模組使用 appState，需要等待完整整合後才能啟用
  */
 
-import { appState } from '../config/constants.js';
-import { clearAllSelections, updateBeamVisualState } from './selection.js';
+import { appState } from "../config/constants.js";
+import { clearAllSelections, updateBeamVisualState } from "./selection.js";
 
 // ============================================
 // 批量編輯對話框函數
@@ -23,13 +23,17 @@ export function openBatchEditDialog() {
     return;
   }
 
-  if (!appState.fullProcessedBeams || appState.fullProcessedBeams.length === 0) {
+  if (
+    !appState.fullProcessedBeams ||
+    appState.fullProcessedBeams.length === 0
+  ) {
     console.warn("[WARN] fullProcessedBeams is empty or undefined!");
     alert("系統資料異常（找不到梁資料），請重新整理頁面後再試");
     return;
   }
 
-  document.getElementById("batch-count").textContent = appState.selectedBeams.size;
+  document.getElementById("batch-count").textContent =
+    appState.selectedBeams.size;
   document.getElementById("batch-new-label").value = "";
 
   // 檢查選中的梁是否有任一屬於標準層群組
@@ -87,9 +91,7 @@ export function closeBatchEditDialog() {
  * 保存批量編輯
  */
 export function saveBatchEdit() {
-  const newLabel = document
-    .getElementById("batch-new-label")
-    .value.trim();
+  const newLabel = document.getElementById("batch-new-label").value.trim();
 
   if (!newLabel) {
     alert("請輸入新的編號");
@@ -99,11 +101,16 @@ export function saveBatchEdit() {
   const linkCheckbox = document.getElementById("batch-link-standard-floor");
   const linkGroup = document.getElementById("batch-link-standard-floor-group");
   const shouldLinkStandardFloors =
-    linkGroup && linkGroup.style.display !== "none" && linkCheckbox && linkCheckbox.checked;
+    linkGroup &&
+    linkGroup.style.display !== "none" &&
+    linkCheckbox &&
+    linkCheckbox.checked;
 
   const selectedStory = document.getElementById("storySelector").value;
 
-  console.log(`\n[批量編輯] 開始處理 ${appState.selectedBeams.size} 個選中的梁`);
+  console.log(
+    `\n[批量編輯] 開始處理 ${appState.selectedBeams.size} 個選中的梁`,
+  );
   console.log(`  新編號: ${newLabel}`);
   console.log(`  當前樓層: ${selectedStory}`);
   console.log(`  連動標準層: ${shouldLinkStandardFloors}`);
@@ -117,13 +124,20 @@ export function saveBatchEdit() {
     // 選取範圍內順號模式
     const baseLabel = sequentialMatch[1];
     const startNumber = parseInt(sequentialMatch[2], 10);
-    
-    console.log(`\n  🔢 [順號模式] 偵測到數字結尾 (${startNumber})，啟用選取範圍順號`);
+
+    console.log(
+      `\n  🔢 [順號模式] 偵測到數字結尾 (${startNumber})，啟用選取範圍順號`,
+    );
     console.log(`    基礎標籤: ${baseLabel}`);
     console.log(`    起始序號: ${startNumber}`);
     console.log(`    選取梁數: ${appState.selectedBeams.size}`);
 
-    applySequentialLabels(baseLabel, selectedStory, shouldLinkStandardFloors, startNumber);
+    applySequentialLabels(
+      baseLabel,
+      selectedStory,
+      shouldLinkStandardFloors,
+      startNumber,
+    );
   } else {
     // 單一標籤模式
     applySingleLabel(newLabel, selectedStory, shouldLinkStandardFloors);
@@ -145,20 +159,25 @@ export function saveBatchEdit() {
  * @param {boolean} shouldLinkStandardFloors - 是否連動標準層
  * @param {number} startNumber - 起始序號 (預設為 1)
  */
-function applySequentialLabels(baseLabel, selectedStory, shouldLinkStandardFloors, startNumber = 1) {
+function applySequentialLabels(
+  baseLabel,
+  selectedStory,
+  shouldLinkStandardFloors,
+  startNumber = 1,
+) {
   // 收集所有選中的梁及其座標
   const beamsWithCoords = [];
-  
+
   appState.selectedBeams.forEach((beamKey) => {
     const [story, name, joint1, joint2] = beamKey.split("|");
-    
+
     // 1. 找到要編輯的梁對象 (在 fullProcessedBeams 中)
     const beam = appState.fullProcessedBeams.find(
       (b) =>
         b.story === story &&
         b.name === name &&
         b.joint1 === joint1 &&
-        b.joint2 === joint2
+        b.joint2 === joint2,
     );
 
     // 2. 找到該梁的座標資訊 (在 fullDrawableBeams 中，因為 fullProcessedBeams 沒有 j1/j2)
@@ -167,9 +186,9 @@ function applySequentialLabels(baseLabel, selectedStory, shouldLinkStandardFloor
         b.story === story &&
         b.name === name &&
         b.joint1 === joint1 &&
-        b.joint2 === joint2
+        b.joint2 === joint2,
     );
-    
+
     // 確保梁存在且有座標
     if (beam && drawableBeam && drawableBeam.j1 && drawableBeam.j2) {
       const midX = (drawableBeam.j1.x + drawableBeam.j2.x) / 2;
@@ -184,8 +203,12 @@ function applySequentialLabels(baseLabel, selectedStory, shouldLinkStandardFloor
   });
 
   // 判斷方向並排序
-  const xRange = Math.max(...beamsWithCoords.map((b) => b.midX)) - Math.min(...beamsWithCoords.map((b) => b.midX));
-  const yRange = Math.max(...beamsWithCoords.map((b) => b.midY)) - Math.min(...beamsWithCoords.map((b) => b.midY));
+  const xRange =
+    Math.max(...beamsWithCoords.map((b) => b.midX)) -
+    Math.min(...beamsWithCoords.map((b) => b.midX));
+  const yRange =
+    Math.max(...beamsWithCoords.map((b) => b.midY)) -
+    Math.min(...beamsWithCoords.map((b) => b.midY));
 
   if (xRange > yRange) {
     // X 方向展開較大，依 X 座標排序（由小到大）
@@ -195,8 +218,14 @@ function applySequentialLabels(baseLabel, selectedStory, shouldLinkStandardFloor
     beamsWithCoords.sort((a, b) => b.midY - a.midY);
   }
 
-  console.log(`[順號除錯] 排序方向: ${xRange > yRange ? 'X (左->右)' : 'Y (上->下)'}`);
-  beamsWithCoords.forEach((b, i) => console.log(`  [${i}] 原名:${b.beam.name} 座標:(${b.midX.toFixed(1)}, ${b.midY.toFixed(1)})`));
+  console.log(
+    `[順號除錯] 排序方向: ${xRange > yRange ? "X (左->右)" : "Y (上->下)"}`,
+  );
+  beamsWithCoords.forEach((b, i) =>
+    console.log(
+      `  [${i}] 原名:${b.beam.name} 座標:(${b.midX.toFixed(1)}, ${b.midY.toFixed(1)})`,
+    ),
+  );
 
   // 依序套用標籤
   beamsWithCoords.forEach((item, index) => {
@@ -225,7 +254,7 @@ function applySingleLabel(newLabel, selectedStory, shouldLinkStandardFloors) {
         b.story === story &&
         b.name === name &&
         b.joint1 === joint1 &&
-        b.joint2 === joint2
+        b.joint2 === joint2,
     );
 
     if (beam) {
@@ -254,9 +283,7 @@ function applyToStandardFloors(beam, newLabel) {
     if (linkedStory === beam.story) return;
 
     const linkedBeam = appState.fullProcessedBeams.find(
-      (b) =>
-        b.story === linkedStory &&
-        b.name === beam.name
+      (b) => b.story === linkedStory && b.name === beam.name,
     );
 
     if (linkedBeam) {
@@ -301,7 +328,7 @@ export function handleAutoIncrement(inputElement) {
   }
 
   const currentGrid = gridsArray[currentIndex];
-  const currentCoordSystem = currentGrid.coordsystem || 'GLOBAL';
+  const currentCoordSystem = currentGrid.coordsystem || "GLOBAL";
 
   // 自動更新後面的格線編號（只更新同一座標系統內的格線）
   const totalGrids = gridsArray.length;
@@ -309,7 +336,7 @@ export function handleAutoIncrement(inputElement) {
 
   for (let i = currentIndex + 1; i < totalGrids; i++) {
     const nextGrid = gridsArray[i];
-    const nextCoordSystem = nextGrid.coordsystem || 'GLOBAL';
+    const nextCoordSystem = nextGrid.coordsystem || "GLOBAL";
 
     // [新增] 檢查是否為同一座標系統
     if (nextCoordSystem !== currentCoordSystem) {

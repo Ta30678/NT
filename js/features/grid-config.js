@@ -1,6 +1,6 @@
 /**
  * BEAM-NAMINGTOOL - Grid 配置功能模組
- * 
+ *
  * 此模組負責：
  * - 顯示格線編號說明
  * - 格線配置介面（需配合 index.html 中的全域變數使用）
@@ -15,9 +15,9 @@
  */
 export function toggleGridConfigHelp() {
   // 檢查是否已有提示框
-  const existingHelp = document.getElementById('grid-config-help-popup');
-  const existingOverlay = document.getElementById('grid-config-help-overlay');
-  
+  const existingHelp = document.getElementById("grid-config-help-popup");
+  const existingOverlay = document.getElementById("grid-config-help-overlay");
+
   if (existingHelp) {
     existingHelp.remove();
     if (existingOverlay) existingOverlay.remove();
@@ -25,8 +25,8 @@ export function toggleGridConfigHelp() {
   }
 
   // 創建提示框
-  const helpPopup = document.createElement('div');
-  helpPopup.id = 'grid-config-help-popup';
+  const helpPopup = document.createElement("div");
+  helpPopup.id = "grid-config-help-popup";
   helpPopup.style.cssText = `
     position: fixed;
     top: 50%;
@@ -71,10 +71,10 @@ export function toggleGridConfigHelp() {
   `;
 
   // 創建遮罩
-  const overlay = document.createElement('div');
-  overlay.id = 'grid-config-help-overlay';
-  overlay.className = 'dialog-overlay';
-  overlay.style.display = 'block';
+  const overlay = document.createElement("div");
+  overlay.id = "grid-config-help-overlay";
+  overlay.className = "dialog-overlay";
+  overlay.style.display = "block";
   overlay.onclick = function () {
     helpPopup.remove();
     overlay.remove();
@@ -92,9 +92,9 @@ export function toggleGridConfigHelp() {
  * 取消格線配置（隱藏配置面板）
  */
 export function cancelGridConfig() {
-  const panel = document.getElementById('grid-config-panel');
+  const panel = document.getElementById("grid-config-panel");
   if (panel) {
-    panel.style.display = 'none';
+    panel.style.display = "none";
   }
 }
 
@@ -102,11 +102,11 @@ export function cancelGridConfig() {
  * Grid Line 系統顏色配置
  */
 export const COORDSYSTEM_COLORS = {
-  GLOBAL: '#4A90E2', // 藍色 - GLOBAL 系統
-  O2: '#E24A4A',     // 紅色
-  A2: '#50C878',     // 綠色
-  A3: '#F39C12',     // 橙色
-  DEFAULT: '#9B59B6' // 紫色 - 其他系統
+  GLOBAL: "#4A90E2", // 藍色 - GLOBAL 系統
+  O2: "#E24A4A", // 紅色
+  A2: "#50C878", // 綠色
+  A3: "#F39C12", // 橙色
+  DEFAULT: "#9B59B6", // 紫色 - 其他系統
 };
 
 /**
@@ -125,7 +125,7 @@ export function getCoordSystemColor(coordsystem) {
  * @returns {number} 偏移距離
  */
 export function getCoordSystemOffset(coordsystem, basePadding = 30) {
-  const systemOrder = ['GLOBAL', 'O2', 'A2', 'A3'];
+  const systemOrder = ["GLOBAL", "O2", "A2", "A3"];
   const index = systemOrder.indexOf(coordsystem);
 
   if (index === -1) {

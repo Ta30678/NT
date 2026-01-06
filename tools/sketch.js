@@ -4,10 +4,10 @@ let squares = [];
 function setup() {
   // 建立一個和瀏覽器視窗一樣大的畫布
   let canvas = createCanvas(windowWidth, windowHeight);
-  
+
   // 將這個畫布放到 id 為 'p5-background' 的容器裡
-  canvas.parent('p5-background');
-  
+  canvas.parent("p5-background");
+
   rectMode(CENTER);
   colorMode(HSB, 360, 100, 100, 100);
   noStroke();
@@ -24,7 +24,7 @@ function windowResized() {
 
 function draw() {
   // 使用深色背景以匹配網站風格 HSB(色相, 飽和度, 亮度)
-  background(21, 100, 15, 100); 
+  background(21, 100, 15, 100);
 
   // --- 中央的脈衝方塊 ---
   let centerSize = map(sin(angle), -1, 1, 100, 250);
@@ -64,7 +64,7 @@ class BouncingSquare {
     this.rotation = random(TWO_PI);
     this.rotationSpeed = random(-0.05, 0.05);
     // 色相調整為橘黃色系，以匹配網站
-    this.hue = random(15, 50); 
+    this.hue = random(15, 50);
     this.sat = random(70, 100);
     this.bri = random(80, 100);
   }

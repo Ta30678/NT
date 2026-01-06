@@ -9,6 +9,7 @@ This update adds AutoCAD-style selection functionality to the beam labeling tool
 ### 1. Window vs Crossing Selection
 
 Just like AutoCAD:
+
 - **Left to Right** (Blue box): Window selection - only selects beams completely inside
 - **Right to Left** (Green box): Crossing selection - selects any beam that touches the box
 
@@ -32,14 +33,14 @@ Just like AutoCAD:
 
 ### 5. Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| Ctrl + Drag | Box selection |
-| Ctrl + Click | Toggle single beam |
-| Shift + Click | Remove from selection |
-| Enter | Batch edit dialog |
-| Esc | Clear all selections |
-| Delete | Reset selected beams to original labels |
+| Shortcut      | Action                                  |
+| ------------- | --------------------------------------- |
+| Ctrl + Drag   | Box selection                           |
+| Ctrl + Click  | Toggle single beam                      |
+| Shift + Click | Remove from selection                   |
+| Enter         | Batch edit dialog                       |
+| Esc           | Clear all selections                    |
+| Delete        | Reset selected beams to original labels |
 
 ## Technical Details
 
@@ -97,17 +98,20 @@ Just like AutoCAD:
 ### Example Scenarios
 
 **Scenario 1: Rename all stair beams to "g1"**
+
 1. Hold Ctrl, drag right→left to select all stair beams
 2. Press Enter
 3. Type "g1"
 4. Click "確定修改"
 
 **Scenario 2: Select only complete beams in an area**
+
 1. Hold Ctrl, drag left→right around target area
 2. Only fully enclosed beams are selected
 3. Batch edit as needed
 
 **Scenario 3: Add one beam to selection**
+
 1. Already have some beams selected
 2. Ctrl+Click on additional beam
 3. It's added to the selection set
@@ -117,23 +121,32 @@ Just like AutoCAD:
 ### Selection State
 
 ```javascript
-let isSelecting = false;        // Currently drawing selection box?
-let selectionStart = null;      // Starting point of selection box
-let selectionRect = null;       // SVG rect element for visual feedback
-let selectedBeams = new Set();  // Set of selected beam names
-let svgElement = null;          // Reference to SVG container
+let isSelecting = false; // Currently drawing selection box?
+let selectionStart = null; // Starting point of selection box
+let selectionRect = null; // SVG rect element for visual feedback
+let selectedBeams = new Set(); // Set of selected beam names
+let svgElement = null; // Reference to SVG container
 ```
 
 ### Selection Algorithm
 
 **Window Mode** (left→right):
+
 ```javascript
 // Both endpoints must be inside rect
-isInside = (x1 >= minX && x1 <= maxX && y1 >= minY && y1 <= maxY &&
-           x2 >= minX && x2 <= maxX && y2 >= minY && y2 <= maxY);
+isInside =
+  x1 >= minX &&
+  x1 <= maxX &&
+  y1 >= minY &&
+  y1 <= maxY &&
+  x2 >= minX &&
+  x2 <= maxX &&
+  y2 >= minY &&
+  y2 <= maxY;
 ```
 
 **Crossing Mode** (right→left):
+
 ```javascript
 // Check if line segment intersects with rectangle
 isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX, maxY);
@@ -142,6 +155,7 @@ isInside = lineIntersectsRect(x1, y1, x2, y2, minX, minY, maxX, maxY);
 ### Intersection Detection
 
 Uses parametric line segment intersection algorithm:
+
 ```javascript
 const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
 const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
@@ -152,11 +166,13 @@ return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
 ## Browser Compatibility
 
 Tested on:
+
 - Chrome/Edge (Chromium-based)
 - Firefox
 - Safari (macOS)
 
 Requires:
+
 - ES6+ JavaScript support
 - SVG support
 - CSS3 features
@@ -171,6 +187,7 @@ Requires:
 ## Future Enhancements
 
 Potential improvements:
+
 - [ ] Auto-increment labels (g1, g2, g3...)
 - [ ] Save/load selection sets
 - [ ] Filter by properties (floor, section size)

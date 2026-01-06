@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+﻿const fs = require("fs");
 
 const TOLERANCE = 0.1;
 const SYMMETRY_TOLERANCE = 0.5;
@@ -8,55 +8,69 @@ const GEOMETRIC_TOLERANCE = 0.01;
 
 function parseGrids(content) {
   const grids = { x: [], y: [] };
-  const gridTableSection = content.match(/TABLE:\s+"GRID DEFINITIONS - LINES"([\s\S]*?)(?=TABLE:|$)/);
+  const gridTableSection = content.match(
+    /TABLE:\s+"GRID DEFINITIONS - LINES"([\s\S]*?)(?=TABLE:|$)/,
+  );
   if (gridTableSection) {
     let currentGrid = {};
-    const lines = gridTableSection[1].trim().split('\n');
+    const lines = gridTableSection[1].trim().split("\n");
     lines.forEach((line) => {
       const trimmed = line.trim();
-      if (trimmed === '') {
-        if (currentGrid.name && currentGrid.type && currentGrid.ordinate !== undefined) {
-          if (currentGrid.type.toUpperCase() === 'X') grids.x.push(currentGrid);
-          else if (currentGrid.type.toUpperCase() === 'Y') grids.y.push(currentGrid);
+      if (trimmed === "") {
+        if (
+          currentGrid.name &&
+          currentGrid.type &&
+          currentGrid.ordinate !== undefined
+        ) {
+          if (currentGrid.type.toUpperCase() === "X") grids.x.push(currentGrid);
+          else if (currentGrid.type.toUpperCase() === "Y")
+            grids.y.push(currentGrid);
         }
         currentGrid = {};
       } else {
         const match = trimmed.match(/(\S+)\s*=\s*"?([^"]*)"?/);
         if (match) {
           const [, key, value] = match;
-          if (key === 'GridID') currentGrid.name = value;
-          if (key === 'GridType') currentGrid.type = value;
-          if (key === 'Ordinate') currentGrid.ordinate = parseFloat(value);
-          if (key === 'BubbleLoc') currentGrid.bubbleLoc = value;
-          if (key === 'LineType') currentGrid.lineType = value;
+          if (key === "GridID") currentGrid.name = value;
+          if (key === "GridType") currentGrid.type = value;
+          if (key === "Ordinate") currentGrid.ordinate = parseFloat(value);
+          if (key === "BubbleLoc") currentGrid.bubbleLoc = value;
+          if (key === "LineType") currentGrid.lineType = value;
         }
       }
     });
     if (currentGrid.name) {
-      if (currentGrid.type.toUpperCase() === 'X') grids.x.push(currentGrid);
-      else if (currentGrid.type.toUpperCase() === 'Y') grids.y.push(currentGrid);
+      if (currentGrid.type.toUpperCase() === "X") grids.x.push(currentGrid);
+      else if (currentGrid.type.toUpperCase() === "Y")
+        grids.y.push(currentGrid);
     }
   }
   if (grids.x.length === 0 && grids.y.length === 0) {
     const gridDollarSection = content.match(/\$ GRIDS([\s\S]*?)(?=\$|$)/);
     if (gridDollarSection) {
-      const lines = gridDollarSection[1].trim().split('\n');
+      const lines = gridDollarSection[1].trim().split("\n");
       lines.forEach((line) => {
-        const match = line.match(/LABEL\s+"([^"]+)"\s+DIR\s+"(X|Y)"\s+COORD\s+([-\d\.E]+)/i);
+        const match = line.match(
+          /LABEL\s+"([^"]+)"\s+DIR\s+"(X|Y)"\s+COORD\s+([-\d\.E]+)/i,
+        );
         if (match) {
           const [, name, type, ordinate] = match;
           const info = { name, type, ordinate: parseFloat(ordinate) };
-          if (type.toUpperCase() === 'X') grids.x.push(info);
-          else if (type.toUpperCase() === 'Y') grids.y.push(info);
+          if (type.toUpperCase() === "X") grids.x.push(info);
+          else if (type.toUpperCase() === "Y") grids.y.push(info);
         }
       });
     }
   }
   if (grids.x.length === 0 && grids.y.length === 0) {
-    throw new Error('Could not find grid definitions.');
+    throw new Error("Could not find grid definitions.");
   }
-  grids.x = [...new Map(grids.x.map((item) => [item.name, item])).values()].sort((a, b) => a.ordinate - b.ordinate);
-  grids.y = [...new Map(grids.y.map((item) => [item.name, item])).values()].sort((a, b) => a.ordinate - b.ordinate);
+  grids.x = [
+    ...new Map(grids.x.map((item) => [item.name, item])).values(),
+  ].sort((a, b) => a.ordinate - b.ordinate);
+  grids.y = [
+    ...new Map(grids.y.map((item) => [item.name, item])).values(),
+  ].sort((a, b) => a.ordinate - b.ordinate);
   return grids;
 }
 
@@ -64,13 +78,16 @@ function parseJoints(content) {
   const joints = {};
   const sciNotationRegex = /"([^"]+)"\s+([-\d\.E]+)\s+([-\d\.E]+)/;
   const pointRegex = /^POINT\s+"([^"]+)"\s+([-\d\.E]+)\s+([-\d\.E]+)/;
-  const nameRegex = /NAME\s*=\s*(\S+)\s*X\s*=\s*([-\d\.E]+)\s*Y\s*=\s*([-\d\.E]+)/;
+  const nameRegex =
+    /NAME\s*=\s*(\S+)\s*X\s*=\s*([-\d\.E]+)\s*Y\s*=\s*([-\d\.E]+)/;
 
-  const jointTableSection = content.match(/TABLE:\s+"JOINT COORDINATES"([\s\S]*?)(?=TABLE:|$)/);
+  const jointTableSection = content.match(
+    /TABLE:\s+"JOINT COORDINATES"([\s\S]*?)(?=TABLE:|$)/,
+  );
   if (jointTableSection) {
-    const lines = jointTableSection[1].trim().split('\n');
+    const lines = jointTableSection[1].trim().split("\n");
     lines.forEach((line) => {
-      if (line.trim().startsWith('JOINT')) return;
+      if (line.trim().startsWith("JOINT")) return;
       const match = line.trim().match(sciNotationRegex);
       if (match) {
         joints[match[1]] = { x: parseFloat(match[2]), y: parseFloat(match[3]) };
@@ -78,7 +95,7 @@ function parseJoints(content) {
     });
   }
   if (Object.keys(joints).length === 0) {
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     lines.forEach((line) => {
       const match = line.trim().match(pointRegex);
       if (match) {
@@ -89,17 +106,20 @@ function parseJoints(content) {
   if (Object.keys(joints).length === 0) {
     const jointDollarSection = content.match(/\$ JOINTS([\s\S]*?)(?=\$|$)/s);
     if (jointDollarSection) {
-      const lines = jointDollarSection[1].trim().split('\n');
+      const lines = jointDollarSection[1].trim().split("\n");
       lines.forEach((line) => {
         const match = line.match(nameRegex);
         if (match) {
-          joints[match[1]] = { x: parseFloat(match[2]), y: parseFloat(match[3]) };
+          joints[match[1]] = {
+            x: parseFloat(match[2]),
+            y: parseFloat(match[3]),
+          };
         }
       });
     }
   }
   if (Object.keys(joints).length === 0) {
-    throw new Error('Could not find joint coordinate definitions.');
+    throw new Error("Could not find joint coordinate definitions.");
   }
   return joints;
 }
@@ -112,22 +132,26 @@ function parseFrames(content, story) {
     const isNumericBeam = /^\d+(\.\d+)?B/.test(p);
     return (
       isNumericBeam ||
-      p.startsWith('B') ||
-      p.startsWith('G') ||
-      p.startsWith('SB') ||
-      p.startsWith('WB') ||
-      p.startsWith('FB') ||
-      p.startsWith('FGB') ||
-      p.startsWith('FSB') ||
-      p.startsWith('FWB')
+      p.startsWith("B") ||
+      p.startsWith("G") ||
+      p.startsWith("SB") ||
+      p.startsWith("WB") ||
+      p.startsWith("FB") ||
+      p.startsWith("FGB") ||
+      p.startsWith("FSB") ||
+      p.startsWith("FWB")
     );
   };
 
-  const frameTableSection = content.match(/TABLE:\s+"CONNECTIVITY - FRAME"([\s\S]*?)(?=TABLE:|$)/);
-  const frameAssignSection = content.match(/TABLE:\s+"FRAME ASSIGNS - SECTION"([\s\S]*?)(?=TABLE:|$)/);
+  const frameTableSection = content.match(
+    /TABLE:\s+"CONNECTIVITY - FRAME"([\s\S]*?)(?=TABLE:|$)/,
+  );
+  const frameAssignSection = content.match(
+    /TABLE:\s+"FRAME ASSIGNS - SECTION"([\s\S]*?)(?=TABLE:|$)/,
+  );
   if (frameTableSection && frameAssignSection) {
-    const connectivityLines = frameTableSection[1].trim().split('\n');
-    const assignLines = frameAssignSection[1].trim().split('\n');
+    const connectivityLines = frameTableSection[1].trim().split("\n");
+    const assignLines = frameAssignSection[1].trim().split("\n");
     const frameProperties = new Map();
     assignLines.forEach((line) => {
       const match = line.trim().match(/^"([^"]+)"\s+"([^"]+)"\s+"([^"]+)"/);
@@ -147,14 +171,23 @@ function parseFrames(content, story) {
     });
   }
   if (frames.length === 0) {
-    const lineConnectivitySection = content.match(/\$ LINE CONNECTIVITIES([\s\S]*?)(?=\$|$)/i);
-    const lineAssignsSection = content.match(/\$ LINE ASSIGNS([\s\S]*?)(?=\$|$)/i);
+    const lineConnectivitySection = content.match(
+      /\$ LINE CONNECTIVITIES([\s\S]*?)(?=\$|$)/i,
+    );
+    const lineAssignsSection = content.match(
+      /\$ LINE ASSIGNS([\s\S]*?)(?=\$|$)/i,
+    );
     if (lineConnectivitySection && lineAssignsSection) {
-      const connectLines = lineConnectivitySection[1].trim().split('\n');
-      const assignLines = lineAssignsSection[1].trim().split('\n');
+      const connectLines = lineConnectivitySection[1].trim().split("\n");
+      const assignLines = lineAssignsSection[1].trim().split("\n");
       const beamAssigns = new Map();
       assignLines.forEach((line) => {
-        const assignMatch = line.match(new RegExp(`LINEASSIGN\\s+"([^\"]+)"\\s+"${story}"\\s+SECTION\\s+"([^\"]+)"`, 'i'));
+        const assignMatch = line.match(
+          new RegExp(
+            `LINEASSIGN\\s+"([^\"]+)"\\s+"${story}"\\s+SECTION\\s+"([^\"]+)"`,
+            "i",
+          ),
+        );
         if (assignMatch) {
           const [, name, propName] = assignMatch;
           if (isBeamProp(propName)) {
@@ -163,11 +196,19 @@ function parseFrames(content, story) {
         }
       });
       connectLines.forEach((line) => {
-        const connMatch = line.match(/LINE\s+"([^"]+)"\s+BEAM\s+"([^"]+)"\s+"([^"]+)"/i);
+        const connMatch = line.match(
+          /LINE\s+"([^"]+)"\s+BEAM\s+"([^"]+)"\s+"([^"]+)"/i,
+        );
         if (connMatch) {
           const [, name, joint1, joint2] = connMatch;
           if (beamAssigns.has(name)) {
-            frames.push({ name, prop: beamAssigns.get(name), joint1, joint2, story });
+            frames.push({
+              name,
+              prop: beamAssigns.get(name),
+              joint1,
+              joint2,
+              story,
+            });
           }
         }
       });
@@ -272,7 +313,10 @@ function detectSymmetryAxis(beams, joints, gridData) {
 
 function getComponentBounds(component, joints) {
   if (!component || component.length === 0) return null;
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
   const uniquePoints = new Set();
   component.forEach((beam) => {
     const p1 = joints[beam.joint1];
@@ -282,7 +326,7 @@ function getComponentBounds(component, joints) {
   });
   if (uniquePoints.size === 0) return null;
   uniquePoints.forEach((key) => {
-    const [x, y] = key.split(',').map(Number);
+    const [x, y] = key.split(",").map(Number);
     minX = Math.min(minX, x);
     maxX = Math.max(maxX, x);
     minY = Math.min(minY, y);
@@ -321,7 +365,12 @@ function isBeamOnSymmetryAxis(beam, joints, axisX, tolerance) {
   return false;
 }
 
-function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = false, globalSymmetryAxisX = null) {
+function findBuildingComponents(
+  allBeamsOnStory,
+  joints,
+  useMirrorMode = false,
+  globalSymmetryAxisX = null,
+) {
   if (!allBeamsOnStory || allBeamsOnStory.length === 0) return [];
 
   const components = [];
@@ -336,10 +385,14 @@ function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = false, 
     if (distance(beamA.p1, beamB.p2) < GEOMETRIC_TOLERANCE) return true;
     if (distance(beamA.p2, beamB.p1) < GEOMETRIC_TOLERANCE) return true;
     if (distance(beamA.p2, beamB.p2) < GEOMETRIC_TOLERANCE) return true;
-    if (isPointOnSegment(beamA.p1, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamA.p2, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamB.p1, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE)) return true;
-    if (isPointOnSegment(beamB.p2, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE)) return true;
+    if (isPointOnSegment(beamA.p1, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamA.p2, beamB.p1, beamB.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamB.p1, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE))
+      return true;
+    if (isPointOnSegment(beamB.p2, beamA.p1, beamA.p2, GEOMETRIC_TOLERANCE))
+      return true;
     return false;
   }
 
@@ -412,16 +465,18 @@ function findBuildingComponents(allBeamsOnStory, joints, useMirrorMode = false, 
   return components;
 }
 
-const file = '2023-0725.e2k';
-const content = fs.readFileSync(file, 'utf8');
+const file = "2023-0725.e2k";
+const content = fs.readFileSync(file, "utf8");
 
-const storySectionMatch = content.match(/\$ STORIES - IN SEQUENCE FROM TOP([\s\S]*?)(?=\$|$)/i);
+const storySectionMatch = content.match(
+  /\$ STORIES - IN SEQUENCE FROM TOP([\s\S]*?)(?=\$|$)/i,
+);
 if (!storySectionMatch) {
-  throw new Error('No story definitions found');
+  throw new Error("No story definitions found");
 }
 const stories = storySectionMatch[1]
   .trim()
-  .split('\n')
+  .split("\n")
   .map((line) => {
     const m = line.match(/STORY\s+"([^\"]+)"/i);
     return m ? m[1] : null;
@@ -444,20 +499,27 @@ const mainBeams = allBeamsAcrossStories.filter((b) => {
   const isNumericBeam = /^\d+(\.\d+)?B/.test(prop);
   return (
     (isNumericBeam ||
-      prop.startsWith('B') ||
-      prop.startsWith('G') ||
-      prop.startsWith('FB') ||
-      prop.startsWith('FGB')) &&
-    !prop.startsWith('SB') &&
-    !prop.startsWith('FSB')
+      prop.startsWith("B") ||
+      prop.startsWith("G") ||
+      prop.startsWith("FB") ||
+      prop.startsWith("FGB")) &&
+    !prop.startsWith("SB") &&
+    !prop.startsWith("FSB")
   );
 });
 const secondaryBeams = allBeamsAcrossStories.filter(
-  (b) => b.prop.toUpperCase().startsWith('SB') && !b.prop.toUpperCase().startsWith('FSB'),
+  (b) =>
+    b.prop.toUpperCase().startsWith("SB") &&
+    !b.prop.toUpperCase().startsWith("FSB"),
 );
 
-console.log('Stories:', stories.join(', '));
-console.log('Total beams -> main:', mainBeams.length, 'secondary:', secondaryBeams.length);
+console.log("Stories:", stories.join(", "));
+console.log(
+  "Total beams -> main:",
+  mainBeams.length,
+  "secondary:",
+  secondaryBeams.length,
+);
 
 let globalSymmetryAxisX = null;
 const axisCandidates = [];
@@ -489,23 +551,41 @@ if (axisCandidates.length > 0) {
   });
   groups.sort((a, b) => b.length - a.length);
   const bestGroup = groups[0];
-  globalSymmetryAxisX = bestGroup.reduce((sum, c) => sum + c.axis, 0) / bestGroup.length;
-  console.log('Global symmetry axis ≈', globalSymmetryAxisX.toFixed(3), 'based on stories', bestGroup.map((c) => c.story).join(', '));
+  globalSymmetryAxisX =
+    bestGroup.reduce((sum, c) => sum + c.axis, 0) / bestGroup.length;
+  console.log(
+    "Global symmetry axis ≈",
+    globalSymmetryAxisX.toFixed(3),
+    "based on stories",
+    bestGroup.map((c) => c.story).join(", "),
+  );
 } else {
-  console.log('No global symmetry axis detected.');
+  console.log("No global symmetry axis detected.");
 }
 
 function analyzeStory(story) {
   console.log(`\n===== Analysis for ${story} =====`);
   const secondary = secondaryBeams.filter((b) => b.story === story);
   const main = mainBeams.filter((b) => b.story === story);
-  console.log(`secondary beams: ${secondary.length}, main beams: ${main.length}`);
+  console.log(
+    `secondary beams: ${secondary.length}, main beams: ${main.length}`,
+  );
   const allBeamsOnStory = [...secondary, ...main];
-  const rawComponents = findBuildingComponents(allBeamsOnStory, joints, true, globalSymmetryAxisX);
-  console.log('raw components:', rawComponents.length);
+  const rawComponents = findBuildingComponents(
+    allBeamsOnStory,
+    joints,
+    true,
+    globalSymmetryAxisX,
+  );
+  console.log("raw components:", rawComponents.length);
   rawComponents.forEach((comp, idx) => {
-    const secondaryCount = comp.filter((beam) => secondary.some((sb) => sb.name === beam.name)).length;
-    const namesPreview = comp.slice(0, 5).map((beam) => beam.name).join(', ');
+    const secondaryCount = comp.filter((beam) =>
+      secondary.some((sb) => sb.name === beam.name),
+    ).length;
+    const namesPreview = comp
+      .slice(0, 5)
+      .map((beam) => beam.name)
+      .join(", ");
     console.log(
       `  raw[${idx}] -> total beams: ${comp.length}, secondary count: ${secondaryCount}, sample: ${namesPreview}`,
     );
@@ -515,13 +595,19 @@ function analyzeStory(story) {
       comp.filter((beam) => secondary.some((sb) => sb.name === beam.name)),
     )
     .filter((comp) => comp.length > 0)
-    .map((comp) => ({ component: comp, bounds: getComponentBounds(comp, joints) }))
+    .map((comp) => ({
+      component: comp,
+      bounds: getComponentBounds(comp, joints),
+    }))
     .sort((a, b) => a.bounds.minX - b.bounds.minX);
 
-  console.log('components containing secondary beams:', components.length);
+  console.log("components containing secondary beams:", components.length);
   components.forEach((comp, idx) => {
     const { minX, maxX, minY, maxY } = comp.bounds;
-    const namesPreview = comp.component.slice(0, 5).map((beam) => beam.name).join(', ');
+    const namesPreview = comp.component
+      .slice(0, 5)
+      .map((beam) => beam.name)
+      .join(", ");
     console.log(
       `  component[${idx}] -> secondary count: ${comp.component.length}, bounds X:[${minX.toFixed(3)}, ${maxX.toFixed(3)}] Y:[${minY.toFixed(3)}, ${maxY.toFixed(3)}], sample: ${namesPreview}`,
     );
@@ -534,7 +620,7 @@ function analyzeStory(story) {
     if (axisX === null) {
       axisX = (master.bounds.maxX + slave.bounds.minX) / 2;
     }
-    console.log('Using axisX =', axisX.toFixed(3));
+    console.log("Using axisX =", axisX.toFixed(3));
 
     const beamsOnAxis = [];
     const slaveBeamsToMirror = [];
@@ -545,16 +631,26 @@ function analyzeStory(story) {
         slaveBeamsToMirror.push(beam);
       }
     });
-    console.log('slave beams total:', slave.component.length, '-> on axis:', beamsOnAxis.length, 'mirror candidates:', slaveBeamsToMirror.length);
+    console.log(
+      "slave beams total:",
+      slave.component.length,
+      "-> on axis:",
+      beamsOnAxis.length,
+      "mirror candidates:",
+      slaveBeamsToMirror.length,
+    );
 
     const masterMirrorTargets = master.component.filter(
       (beam) => !isBeamOnSymmetryAxis(beam, joints, axisX, SYMMETRY_TOLERANCE),
     );
-    console.log('master beams eligible for mirroring:', masterMirrorTargets.length);
+    console.log(
+      "master beams eligible for mirroring:",
+      masterMirrorTargets.length,
+    );
 
     if (components.length > 2) {
       const extra = components.slice(2);
-      console.log('extra components (treated as orphans):', extra.length);
+      console.log("extra components (treated as orphans):", extra.length);
       extra.forEach((comp, idx) => {
         console.log(
           `  extra[${idx}] secondary count: ${comp.component.length}, bounds X:[${comp.bounds.minX.toFixed(3)}, ${comp.bounds.maxX.toFixed(3)}]`,
@@ -564,4 +660,4 @@ function analyzeStory(story) {
   }
 }
 
-analyzeStory('2F');
+analyzeStory("2F");

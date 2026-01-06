@@ -7,17 +7,20 @@ This PR implements comprehensive grid bubble functionality including toggle cont
 ## ✨ Features
 
 ### 1. 🎯 Grid Bubble Toggle Control
+
 - Added control panel to show/hide grid bubbles by coordinate system (GLOBAL, O2, A2, A3)
 - Color-coded toggle switches for each grid system
 - Independent visibility control for bubbles, text, and connectors
 
 ### 2. 🖱️ Interactive Drag Functionality
+
 - Drag grid bubbles freely with mouse
 - Rubber-band animation effect during drag
 - Smooth snap-back to original position on release
 - Prevents text selection during drag interaction
 
 ### 3. 📊 BUBBLELOC Parsing from E2K
+
 - Parses BUBBLELOC attribute from E2K $ GRIDS format
 - Correctly positions bubbles based on ETABS settings:
   - **DEFAULT**: left side (Y-axis) / top side (X-axis)
@@ -26,6 +29,7 @@ This PR implements comprehensive grid bubble functionality including toggle cont
 - Handles missing BUBBLELOC (defaults to DEFAULT)
 
 ### 4. 🚀 Performance Optimizations
+
 - Zoom/pan state preserved when changing floors
 - requestAnimationFrame for smooth animations
 - DOM query result caching
@@ -34,21 +38,25 @@ This PR implements comprehensive grid bubble functionality including toggle cont
 ## 🔧 Technical Changes
 
 ### UI Components
+
 - Added `grid-bubble-control-panel` with toggle switches
 - Added "🎯 Grid 控制" button in toolbar
 - CSS styles for draggable bubbles and rubber-band animation
 
 ### Parsing Logic
+
 - Modified `parseGrids()` to extract BUBBLELOC from $ GRIDS format
 - Added `bubbleLoc` property to grid info objects
 - Regex pattern: `/BUBBLELOC\s+"([^"]+)"/i`
 
 ### Rendering Logic
+
 - Updated grid bubble rendering in `displayResults()`
 - Changed conditional logic from "Start"/"End"/"Both" to DEFAULT/SWITCHED/BOTH
 - Added `data-coordsystem` attributes to all grid elements
 
 ### Interaction Handlers
+
 - `toggleGridBubbleControlPanel()` - Show/hide control panel
 - `initializeGridBubbleControls()` - Create toggle switches
 - `toggleGridSystem()` - Toggle system visibility
@@ -58,16 +66,19 @@ This PR implements comprehensive grid bubble functionality including toggle cont
 ## 📸 User Experience
 
 **Before dragging:**
+
 - Hover over bubble → cursor changes to move
 - Bubble slightly enlarges on hover
 
 **During dragging:**
+
 - Bubble follows mouse cursor
 - Connector line stretches like rubber band
 - Dashed line animation shows active drag
 - No text selection interference
 
 **After releasing:**
+
 - Bubble smoothly returns to original position (0.3s ease-out)
 - Text and connector synchronize
 - Clean visual feedback
@@ -75,6 +86,7 @@ This PR implements comprehensive grid bubble functionality including toggle cont
 ## 🧪 Testing
 
 Tested with:
+
 - E2K file with multiple COORDSYSTEMS (GLOBAL, O2, A2, A3)
 - BUBBLELOC variations (DEFAULT, SWITCHED, missing)
 - Floor switching with zoom/pan state preservation
@@ -91,6 +103,7 @@ None. All changes are additive and backward compatible.
 ---
 
 **Commits:**
+
 1. `0884126` - feat: add grid bubble toggle and drag functionality
 2. `562c156` - fix: improve grid bubble drag behavior
 3. `f19ec5d` - feat: parse and apply BUBBLELOC from E2K files
@@ -122,10 +135,12 @@ None. All changes are additive and backward compatible.
 ## 🆕 Latest Update (3265aff) - 防止圈選干擾拖曳 ✅ 終極流暢體驗
 
 **解決的問題**：
+
 - ❌ **點擊 BUBBLE 時會觸發圈選功能，干擾拖曳操作** → ✅ **BUBBLE 區域完全不觸發圈選**
 
 **問題描述** 🔍：
 當使用者點擊 BUBBLE 時，頁面的圈選功能（selection box）會同時被觸發，導致：
+
 - 出現選取框遮擋視線
 - 干擾 BUBBLE 的拖曳操作
 - 使用者很難抓取或拉動 BUBBLE
@@ -137,17 +152,20 @@ None. All changes are additive and backward compatible.
 **修復方案**：
 
 ### 在圈選功能中添加 BUBBLE 檢查 🛡️
+
 ```javascript
 function onSelectionStart(evt) {
   // ✅ 新增：檢查是否點擊 BUBBLE 相關元素
   const target = evt.target;
-  const targetClass = target.getAttribute('class') || '';
-  if (targetClass.includes('grid-bubble') ||
-      targetClass.includes('grid-bubble-hitarea') ||
-      targetClass.includes('grid-bubble-text') ||
-      targetClass.includes('grid-bubble-connector')) {
+  const targetClass = target.getAttribute("class") || "";
+  if (
+    targetClass.includes("grid-bubble") ||
+    targetClass.includes("grid-bubble-hitarea") ||
+    targetClass.includes("grid-bubble-text") ||
+    targetClass.includes("grid-bubble-connector")
+  ) {
     console.log("[DEBUG] Clicked on grid bubble element, skip selection");
-    return;  // 讓 BUBBLE 的拖曳功能處理，不啟動圈選
+    return; // 讓 BUBBLE 的拖曳功能處理，不啟動圈選
   }
 
   // ... 原有的圈選邏輯
@@ -155,32 +173,38 @@ function onSelectionStart(evt) {
 ```
 
 ### 雙重防護機制 🔒
+
 **1. BUBBLE 端防護**（已存在）：
+
 ```javascript
 function handleBubbleMouseDown(e) {
-  e.stopPropagation();  // 阻止事件冒泡
-  e.preventDefault();   // 阻止默認行為
+  e.stopPropagation(); // 阻止事件冒泡
+  e.preventDefault(); // 阻止默認行為
   // ...
 }
 ```
 
 **2. 圈選端防護**（新增）：
+
 - 主動檢查點擊目標
 - 如果是 BUBBLE 元素就直接返回
 - 確保圈選功能完全不啟動
 
 **為什麼需要兩層防護？**
+
 - 事件監聽器的執行順序可能不確定
 - `stopPropagation` 可能在某些情況下失效
 - 雙重防護確保 100% 可靠
 
 **測試確認**：
+
 - ✅ 點擊 BUBBLE → 只觸發拖曳，不出現圈選框
 - ✅ 點擊空白處 → 正常啟動圈選功能
 - ✅ 拖曳 BUBBLE → 流暢無干擾
 - ✅ 圈選梁構件 → 功能正常
 
 **使用者體驗提升**：
+
 - 🎯 點擊更精準 - 不會誤觸圈選
 - 🖱️ 拖曳更流暢 - 沒有選取框干擾
 - ✨ 操作更直覺 - BUBBLE 專心處理拖曳
@@ -191,20 +215,22 @@ function handleBubbleMouseDown(e) {
 ## 📝 Previous Update (0552e06) - 修復 bubble 同步移動
 
 **解決的問題**：
+
 - ❌ **拖曳時只有文字在動，BUBBLE 圓圈沒有跟著移動** → ✅ **BUBBLE、文字、connector 完全同步**
 
 **根本原因分析** 🔍：
 在統一點擊偵測時，`handleBubbleMouseDown` 中的 `bubble` 變量實際上是 `hitarea` 元素，而不是真正的 BUBBLE 圓圈：
 
 ```javascript
-const bubble = e.currentTarget;  // ❌ 這是 hitarea，不是真正的 bubble！
-dragState.currentBubble = bubble;  // ❌ 保存了錯誤的元素
+const bubble = e.currentTarget; // ❌ 這是 hitarea，不是真正的 bubble！
+dragState.currentBubble = bubble; // ❌ 保存了錯誤的元素
 ```
 
 導致在 `handleBubbleMouseMove` 和 `handleBubbleMouseUp` 中更新位置時：
+
 ```javascript
-bubble.setAttribute("cx", newCx);  // ❌ 更新的是 hitarea 的 cx/cy
-bubble.setAttribute("cy", newCy);  // ❌ 而不是真正 bubble 的 cx/cy
+bubble.setAttribute("cx", newCx); // ❌ 更新的是 hitarea 的 cx/cy
+bubble.setAttribute("cy", newCy); // ❌ 而不是真正 bubble 的 cx/cy
 ```
 
 結果：只有 text 和 connector 移動，bubble 圓圈完全不動。
@@ -212,23 +238,27 @@ bubble.setAttribute("cy", newCy);  // ❌ 而不是真正 bubble 的 cx/cy
 **修復詳情**：
 
 ### 1. 明確區分 hitarea 和 bubble 🎯
+
 ```javascript
 // ✅ 現在：明確命名，避免混淆
-const hitarea = e.currentTarget;  // 被點擊的 hitarea
+const hitarea = e.currentTarget; // 被點擊的 hitarea
 const coordsystem = hitarea.getAttribute("data-coordsystem");
 const hitareaCx = parseFloat(hitarea.getAttribute("cx"));
 const hitareaCy = parseFloat(hitarea.getAttribute("cy"));
 ```
 
 ### 2. 查找真正的 bubble 元素 🔍
+
 ```javascript
 // ✅ 查找所有相同座標系的 bubble 圓圈
-const bubbles = svg.querySelectorAll(`.grid-bubble[data-coordsystem="${coordsystem}"]`);
+const bubbles = svg.querySelectorAll(
+  `.grid-bubble[data-coordsystem="${coordsystem}"]`,
+);
 
 // ✅ 找到位置相同的真正 bubble 圓圈
 let matchingBubble = null;
 let minBubbleDist = Infinity;
-bubbles.forEach(bubble => {
+bubbles.forEach((bubble) => {
   const bx = parseFloat(bubble.getAttribute("cx"));
   const by = parseFloat(bubble.getAttribute("cy"));
   const dist = Math.sqrt((bx - hitareaCx) ** 2 + (by - hitareaCy) ** 2);
@@ -240,14 +270,16 @@ bubbles.forEach(bubble => {
 ```
 
 ### 3. 保存正確的元素 💾
+
 ```javascript
 // ✅ 保存真正的 bubble 圓圈到 dragState
-dragState.currentBubble = matchingBubble;  // 不是 hitarea！
+dragState.currentBubble = matchingBubble; // 不是 hitarea！
 dragState.currentText = matchingText;
 dragState.currentConnector = matchingConnector;
 ```
 
 ### 4. 添加安全檢查 🛡️
+
 ```javascript
 // ✅ 確保找到所有必要元素
 if (!matchingBubble) {
@@ -261,6 +293,7 @@ if (!matchingConnector) {
 ```
 
 ### 5. 元素層疊架構 📚
+
 ```
 點擊事件流：
 User Click → [hitarea] → handleBubbleMouseDown
@@ -276,12 +309,14 @@ User Click → [hitarea] → handleBubbleMouseDown
 ```
 
 **測試確認**：
+
 - ✅ 拖曳 BUBBLE → bubble 圓圈、文字、connector 完全同步移動
 - ✅ 釋放鼠標 → 所有元素一起平滑回彈
 - ✅ 水平/垂直/斜向 BUBBLE → 全部正常運作
 - ✅ 點擊任何位置 → 立即響應，無延遲
 
 **程式碼改進**：
+
 - 🏷️ 變量命名更清晰 (`hitarea` vs `matchingBubble`)
 - 🔍 添加元素查找邏輯
 - 🛡️ 添加安全檢查機制
@@ -292,6 +327,7 @@ User Click → [hitarea] → handleBubbleMouseDown
 ## 📝 Previous Update (92a6fd0) - 修復 hitarea fill 區域點擊
 
 **解決的問題**：
+
 - ❌ **只有 BUBBLE 邊框可以拖曳，內部區域無法點擊** → ✅ **整個 BUBBLE 區域 100% 可點擊**
 
 **根本原因分析** 🔍：
@@ -300,6 +336,7 @@ SVG 的 `fill="transparent"` 在某些瀏覽器中不會觸發 `pointer-events`�
 **修復詳情**：
 
 ### 1. fill 屬性修正 🎨
+
 ```javascript
 // ❌ 之前：fill 區域不接收點擊
 hitArea.setAttribute("fill", "transparent");
@@ -307,16 +344,18 @@ hitArea.setAttribute("stroke", "transparent");
 hitArea.setAttribute("stroke-width", "20");
 
 // ✅ 現在：整個圓形都接收點擊
-hitArea.setAttribute("fill", "rgba(255,255,255,0.01)");  // 實際透明色
-hitArea.setAttribute("stroke", "none");  // 不需要描邊
+hitArea.setAttribute("fill", "rgba(255,255,255,0.01)"); // 實際透明色
+hitArea.setAttribute("stroke", "none"); // 不需要描邊
 ```
 
 **為什麼要用 `rgba(255,255,255,0.01)` 而不是 `transparent`？**
+
 - `fill="transparent"` 在 SVG 中等同於 `fill="none"`，不會渲染 fill 區域
 - `rgba(255,255,255,0.01)` 是實際的顏色（幾乎完全透明），會渲染 fill 區域並接收點擊事件
 - 0.01 的透明度肉眼看不見，但足以讓 SVG 渲染該區域
 
 ### 2. 擴大點擊範圍 📏
+
 ```javascript
 // ❌ 之前：+10 + stroke(20) = +20 總範圍（但只有邊框能點）
 hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 10);
@@ -326,6 +365,7 @@ hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 20);
 ```
 
 ### 3. 視覺層疊不變 📚
+
 ```
 [頂層] grid-bubble-text (pointer-events: none)
         ↓ 穿透
@@ -336,6 +376,7 @@ hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 20);
 ```
 
 **測試確認**：
+
 - ✅ 點擊 BUBBLE 中心 → 立即響應拖曳
 - ✅ 點擊 BUBBLE 內文字 → 立即響應拖曳
 - ✅ 點擊 BUBBLE 白色背景 → 立即響應拖曳
@@ -343,6 +384,7 @@ hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 20);
 - ✅ 點擊 BUBBLE 外圍擴展區 → 立即響應拖曳
 
 **技術要點** 💡：
+
 - SVG `pointer-events` 只對實際渲染的區域有效
 - `transparent` 和 `rgba(0,0,0,0)` 在顯示上相同，但事件處理不同
 - 使用極低透明度（0.01）既不影響視覺，又能正確處理事件
@@ -352,27 +394,33 @@ hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 20);
 ## 📝 Previous Update (c007a20) - 統一點擊偵測架構
 
 **解決的核心問題**：
+
 - ❌ **點擊 BUBBLE 圓圈、文字、白色區域有不一致的判定** → ✅ **統一由 hitarea 處理，100% 可靠**
 
 **重構詳情**：
 
 ### 架構簡化 🏗️
+
 之前的實現有三個獨立的事件處理路徑：
+
 1. `grid-bubble-hitarea` → `handleBubbleMouseDown`
 2. `grid-bubble` → `handleBubbleMouseDown`
 3. `grid-bubble-text` → `handleTextMouseDown` → 尋找 hitarea → 偽造事件 → `handleBubbleMouseDown`
 
 這種分散的架構導致：
+
 - 文字和白色區域點擊可能失敗（需要精確匹配座標）
 - 多個 `pointer-events` 層疊，事件傳遞複雜
 - 代碼重複，難以維護
 
 ### 新架構 ✨
+
 **單一點擊接收者**：
+
 ```javascript
 // ✅ 只有 hitarea 接收所有點擊
 const hitareas = svg.querySelectorAll(".grid-bubble-hitarea.draggable");
-hitareas.forEach(hitarea => {
+hitareas.forEach((hitarea) => {
   hitarea.addEventListener("mousedown", handleBubbleMouseDown);
 });
 
@@ -382,20 +430,23 @@ text.style.pointerEvents = "none";
 ```
 
 ### CSS 變更 🎨
+
 ```css
 .grid-bubble-text {
   /* 之前：pointer-events: all; cursor: move; */
-  pointer-events: none;  /* 讓點擊穿透到下層的 hitarea */
-  user-select: none;     /* 防止文字被選取 */
+  pointer-events: none; /* 讓點擊穿透到下層的 hitarea */
+  user-select: none; /* 防止文字被選取 */
 }
 ```
 
 ### 移除的代碼 🗑️
+
 - ❌ 移除 `handleTextMouseDown` 函數（48 行）
 - ❌ 移除 text 元素的單獨事件監聽器
 - ❌ 移除 bubble 元素的單獨事件監聽器
 
 ### 視覺層疊結構 📚
+
 ```
 [最上層] grid-bubble-text (pointer-events: none)
          ↓ 點擊穿透
@@ -405,12 +456,14 @@ text.style.pointerEvents = "none";
 ```
 
 **測試確認**：
+
 - ✅ 點擊 BUBBLE 圓圈邊緣 → 100% 可靠觸發拖曳
 - ✅ 點擊 BUBBLE 內文字 → 100% 可靠觸發拖曳
 - ✅ 點擊 BUBBLE 白色背景 → 100% 可靠觸發拖曳
 - ✅ 點擊 BUBBLE 周圍擴展區域 → 100% 可靠觸發拖曳
 
 **程式碼品質提升**：
+
 - 📉 減少 60 行代碼
 - 🎯 單一責任原則 - 只有 hitarea 處理點擊
 - 🔧 更易維護 - 不需要座標匹配邏輯
@@ -421,30 +474,33 @@ text.style.pointerEvents = "none";
 ## 📝 Previous Update (1aae41b) - 修復文字點擊
 
 **解決的問題**：
+
 - ❌ **點擊 BUBBLE 內的文字無法拖曳** → ✅ 文字完全可點擊
 
 **修復詳情**：
 
 ### 1. 添加文字 CSS 樣式 🎨
+
 ```css
 .grid-bubble-text {
-  pointer-events: all;    /* 讓文字接收點擊事件 */
-  cursor: move;           /* 提示可拖曳 */
-  user-select: none;      /* 防止拖曳時選中文字 */
+  pointer-events: all; /* 讓文字接收點擊事件 */
+  cursor: move; /* 提示可拖曳 */
+  user-select: none; /* 防止拖曳時選中文字 */
 }
 ```
 
 ### 2. 修復 handleTextMouseDown 函數 🔧
+
 由於實際的 bubble 已設置 `pointer-events: none`，文字點擊需要找到對應的 hitarea：
 
 ```javascript
 // 先找 hitarea（現在的點擊接收者）
 let hitareas = svg.querySelectorAll(`.grid-bubble-hitarea[...]`);
-hitareas.forEach(hitarea => {
+hitareas.forEach((hitarea) => {
   const cx = parseFloat(hitarea.getAttribute("cx"));
   const cy = parseFloat(hitarea.getAttribute("cy"));
   if (Math.abs(cx - textX) < 5 && Math.abs(cy - textY) < 5) {
-    matchingElement = hitarea;  // 找到對應的 hitarea
+    matchingElement = hitarea; // 找到對應的 hitarea
   }
 });
 
@@ -455,6 +511,7 @@ if (!matchingElement) {
 ```
 
 **測試確認**：
+
 - ✅ 點擊 BUBBLE 圓圈 → 可以拖曳
 - ✅ 點擊 BUBBLE 內文字 → 可以拖曳
 - ✅ 點擊 BUBBLE 周圍區域（hitarea）→ 可以拖曳
@@ -464,21 +521,26 @@ if (!matchingElement) {
 ## 📝 Previous Update (705ccdf) - 完美點擊體驗
 
 **解決的核心問題**：
+
 1. ❌ **點擊判定太嚴格** → ✅ 整個圓圈都可點擊
 2. ❌ **斜向 BUBBLE 無法往外拉** → ✅ 支持雙向拖曳
 
 **修復詳情**：
 
 ### 1. 擴大點擊判定範圍 🎯
+
 為每個 BUBBLE 添加不可見的 hitarea 圓圈：
 
 ```javascript
 // 創建透明的 hitarea（半徑 +10，加上 20px 描邊）
-const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+const hitArea = document.createElementNS(
+  "http://www.w3.org/2000/svg",
+  "circle",
+);
 hitArea.setAttribute("r", INITIAL_GRID_BUBBLE_RADIUS + 10);
 hitArea.setAttribute("class", "grid-bubble-hitarea draggable");
 hitArea.setAttribute("fill", "transparent");
-hitArea.setAttribute("stroke-width", "20");  // 進一步擴大點擊範圍
+hitArea.setAttribute("stroke-width", "20"); // 進一步擴大點擊範圍
 
 // 實際的 bubble 不接收點擊事件
 bubble.setAttribute("pointer-events", "none");
@@ -487,17 +549,20 @@ bubble.setAttribute("pointer-events", "none");
 **效果**：從 BUBBLE 中心到最外圍邊緣的整個區域都可以點擊拖曳，不會再出現"點到了卻沒辦法拉動"的問題。
 
 ### 2. 支持雙向拖曳 ↔️
+
 - BUBBLE 可以沿著 connector 方向**雙向移動**
 - 既可以靠近 grid line（往內），也可以遠離 grid line（往外）
 - 投影計算支持正負值，範圍 ±100 單位
 - 斜向 BUBBLE 現在完全可以正常往外拉
 
 ### 3. 視覺效果
+
 - hitarea 完全透明，不影響視覺
 - hover 時 cursor 變為 move，提示可拖曳
 - 所有 BUBBLE（top, bottom, left, right）統一處理
 
 **測試確認**：
+
 - ✅ 水平 BUBBLE - 點擊邊緣也能拖曳
 - ✅ 垂直 BUBBLE - 點擊邊緣也能拖曳
 - ✅ 斜向 BUBBLE - **可以往外拉** + 點擊靈敏
@@ -507,6 +572,7 @@ bubble.setAttribute("pointer-events", "none");
 ## 📝 Previous Update (8eb8cf9) - 完美拖曳體驗
 
 **解決的問題**：
+
 1. ❌ **斜向 BUBBLE 會跳動** → ✅ 平滑跟隨鼠標
 2. ❌ **不同 BUBBLE 速度不一致** → ✅ 統一移動感受
 3. ❌ **回彈動畫過慢** → ✅ 快速流暢回彈
@@ -514,6 +580,7 @@ bubble.setAttribute("pointer-events", "none");
 **修復詳情**：
 
 ### 1. 修復斜向 BUBBLE 跳動問題
+
 ```javascript
 // ❌ 之前（錯誤）：相對於 BUBBLE 原始位置計算
 const mouseDx = pt.x - dragState.originalBubblePos.x;
@@ -527,22 +594,25 @@ const mouseDy = pt.y - dragState.startMousePos.y;
 ```
 
 ### 2. 統一拖曳速度感受
+
 ```javascript
 // ❌ 之前：基於 bubble 半徑（不同 BUBBLE 不同範圍）
 dragState.maxDragDistance = 5 * bubbleRadius;
 
 // ✅ 現在：固定距離（所有 BUBBLE 一致）
-dragState.maxDragDistance = 100;  // 統一 100 單位
+dragState.maxDragDistance = 100; // 統一 100 單位
 ```
 
 ### 3. 優化回彈動畫參數
-| 參數 | 之前 | 現在 | 效果 |
-|------|------|------|------|
-| 彈簧剛度 (stiffness) | 0.15 | 0.25 | 回彈更快 ⚡ |
-| 阻尼係數 (damping) | 0.70 | 0.75 | 減少震盪 🎯 |
-| 停止閾值 (minDistance) | 0.1 | 0.5 | 更快停止 ✅ |
+
+| 參數                   | 之前 | 現在 | 效果        |
+| ---------------------- | ---- | ---- | ----------- |
+| 彈簧剛度 (stiffness)   | 0.15 | 0.25 | 回彈更快 ⚡ |
+| 阻尼係數 (damping)     | 0.70 | 0.75 | 減少震盪 🎯 |
+| 停止閾值 (minDistance) | 0.1  | 0.5  | 更快停止 ✅ |
 
 **視覺效果對比**：
+
 - 水平 BUBBLE（X 軸）：⬅️➡️ 流暢拖曳 + 快速回彈
 - 垂直 BUBBLE（Y 軸）：⬆️⬇️ 流暢拖曳 + 快速回彈
 - 斜向 BUBBLE：↗️↘️ **不再跳動** + 一致速度感
@@ -555,6 +625,7 @@ dragState.maxDragDistance = 100;  // 統一 100 單位
 之前的實現錯誤地將 connector 方向旋轉了 90 度，導致 BUBBLE 沿著 grid line 本身移動，而不是垂直於 grid line 的方向移動。
 
 **修正內容**：
+
 - ❌ **之前（錯誤）**：BUBBLE 沿著 grid line 切線方向移動（旋轉 90 度後）
   - Y 軸 BUBBLE（如 Y16-1）會水平移動 ⬅️➡️
   - X 軸 BUBBLE 會垂直移動 ⬆️⬇️
@@ -564,17 +635,18 @@ dragState.maxDragDistance = 100;  // 統一 100 單位
   - X 軸 BUBBLE 會水平移動 ⬅️➡️
 
 **技術細節**：
+
 ```javascript
 // 之前的錯誤邏輯（旋轉 90 度）
 dragState.gridLineDirection = {
-  x: connectorUnitY,   // 順時針旋轉 90 度
-  y: -connectorUnitX
+  x: connectorUnitY, // 順時針旋轉 90 度
+  y: -connectorUnitX,
 };
 
 // 現在的正確邏輯（直接使用 connector 方向）
 dragState.gridLineDirection = {
-  x: connectorUnitX,   // 沿著 connector 方向
-  y: connectorUnitY
+  x: connectorUnitX, // 沿著 connector 方向
+  y: connectorUnitY,
 };
 ```
 
@@ -583,6 +655,7 @@ dragState.gridLineDirection = {
 ## 📝 Previous Update (e62d82d) - 完整修復拖曳功能
 
 **主要修復問題**：
+
 1. **事件綁定位置錯誤** - 將 `mousemove`/`mouseup` 從 SVG 移到 `document`
    - 修復：鼠標移出 SVG 範圍時拖曳會中斷的問題
    - 確保在整個頁面範圍內都能順暢拖曳
@@ -608,6 +681,7 @@ dragState.gridLineDirection = {
 ✅ **平滑 60fps 動畫** - 使用 `requestAnimationFrame` 實現流暢回彈
 
 **測試建議**：
+
 1. 打開瀏覽器開發者工具的 Console 標籤
 2. 上傳 E2K 文件並執行編號
 3. 顯示 Grid Bubble（點擊 "🎯 Grid 控制"）
